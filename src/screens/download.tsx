@@ -1,10 +1,25 @@
 import React, {useState} from 'react';
-import {StyleSheet, Keyboard, TouchableWithoutFeedback} from 'react-native';
+import {StyleSheet, Keyboard, TouchableWithoutFeedback, TouchableOpacity} from 'react-native';
 import {View, Text, TextField, Button, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
 import {Ionicons} from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+
+// Define TikTok URL patterns
+const TIKTOK_URL_PATTERNS = [
+  // vt.tiktok.com short links
+  /https?:\/\/vt\.tiktok\.com\/[A-Za-z0-9]+\/?/,
+  // vm.tiktok.com short links
+  /https?:\/\/vm\.tiktok\.com\/[A-Za-z0-9]+\/?/,
+  // Standard web URLs
+  /https?:\/\/(?:www\.)?tiktok\.com\/@[A-Za-z0-9_.]+\/video\/\d+/,
+  // Mobile URLs
+  /https?:\/\/m\.tiktok\.com\/v\/(\d+)\.html/,
+  // Just the video ID (numeric only)
+  /\b\d{19}\b/,
+];
 
 export const Download = () => {
   const {t} = useServices();
@@ -23,7 +38,10 @@ export const Download = () => {
       return;
     }
 
-    if (!tiktokUrl.includes('tiktok.com')) {
+    // Check if the URL is a valid TikTok URL using the same patterns
+    const isValidTikTokUrl = TIKTOK_URL_PATTERNS.some(pattern => pattern.test(tiktokUrl));
+
+    if (!isValidTikTokUrl) {
       setError('Please enter a valid TikTok URL');
       return;
     }
@@ -48,6 +66,50 @@ export const Download = () => {
     }
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await Clipboard.getStringAsync();
+      if (text) {
+        // Try each pattern and use the first match found
+        for (const pattern of TIKTOK_URL_PATTERNS) {
+          const match = text.match(pattern);
+          if (match && match[0]) {
+            setTiktokUrl(match[0]);
+            return;
+          }
+        }
+
+        // If no patterns match, use the original text
+        setTiktokUrl(text);
+      }
+    } catch (err) {
+      console.error('Failed to paste from clipboard', err);
+    }
+  };
+
+  const renderTrailingAccessory = () => {
+    if (tiktokUrl) {
+      return (
+        <TouchableWithoutFeedback onPress={() => setTiktokUrl('')}>
+          <Ionicons
+            name="close-circle"
+            size={20}
+            color={Colors.grey40}
+            style={styles.accessoryIcon}
+          />
+        </TouchableWithoutFeedback>
+      );
+    }
+
+    return (
+      <TouchableOpacity onPress={handlePaste} style={styles.pasteButton}>
+        <Text text80 color={Colors.primary}>
+          Paste
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <Screen>
@@ -66,18 +128,7 @@ export const Download = () => {
               autoCorrect={false}
               keyboardType="url"
               placeholderTextColor={Colors.grey40}
-              trailingAccessory={
-                tiktokUrl ? (
-                  <TouchableWithoutFeedback onPress={() => setTiktokUrl('')}>
-                    <Ionicons
-                      name="close-circle"
-                      size={20}
-                      color={Colors.grey40}
-                      style={styles.clearIcon}
-                    />
-                  </TouchableWithoutFeedback>
-                ) : undefined
-              }
+              trailingAccessory={renderTrailingAccessory()}
             />
           </View>
 
@@ -127,8 +178,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 48,
   },
-  clearIcon: {
+  accessoryIcon: {
     padding: 4,
+  },
+  pasteButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    backgroundColor: Colors.grey70,
+    marginRight: 4,
   },
   button: {
     width: '100%',
