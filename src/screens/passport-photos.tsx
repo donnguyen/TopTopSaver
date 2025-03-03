@@ -10,24 +10,24 @@ import {useStores} from '@app/stores';
 import {usePhotosDatabase} from '@app/services/db/photo';
 import {observer} from 'mobx-react';
 import {useServices} from '@app/services';
-import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+// import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
 
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : Platform.OS === 'ios'
-    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
-    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
+// const adUnitId = __DEV__
+//   ? TestIds.ADAPTIVE_BANNER
+//   : Platform.OS === 'ios'
+//     ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+//     : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
 export const PassportPhotos = observer(() => {
   const {photos: photosStore} = useStores();
   const photosDb = usePhotosDatabase();
   const navigation = useNavigation();
   const {navio} = useServices();
-  const bannerRef = useRef<BannerAd>(null);
+  // const bannerRef = useRef<BannerAd>(null);
 
-  useForeground(() => {
-    Platform.OS === 'ios' && bannerRef.current?.load();
-  });
+  // useForeground(() => {
+  //   Platform.OS === 'ios' && bannerRef.current?.load();
+  // });
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -86,7 +86,6 @@ export const PassportPhotos = observer(() => {
     return (
       <Screen unsafe>
         <EmptyState />
-        <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
       </Screen>
     );
   }
@@ -94,7 +93,6 @@ export const PassportPhotos = observer(() => {
   return (
     <Screen unsafe>
       <FlashList {...listProps} />
-      <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
     </Screen>
   );
 });

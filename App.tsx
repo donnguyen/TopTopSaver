@@ -6,7 +6,7 @@ import * as Linking from 'expo-linking';
 import {StatusBar} from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import mobileAds from 'react-native-google-mobile-ads';
+// import mobileAds from 'react-native-google-mobile-ads';
 
 import {NavioApp} from '@app/navio';
 import {
@@ -38,11 +38,11 @@ export default (): JSX.Element => {
     configureDesignSystem();
     await initServices();
 
-    mobileAds()
-      .initialize()
-      .then(adapterStatuses => {
-        console.log('adapterStatuses', adapterStatuses);
-      });
+    // mobileAds()
+    //   .initialize()
+    //   .then(adapterStatuses => {
+    //     console.log('adapterStatuses', adapterStatuses);
+    //   });
 
     setReady(true);
     await SplashScreen.hideAsync();

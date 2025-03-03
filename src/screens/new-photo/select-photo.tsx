@@ -11,13 +11,13 @@ import {usePhotosDatabase} from '@app/services/db/photo';
 import {useServices} from '@app/services';
 import {useStores} from '@app/stores';
 import {observer} from 'mobx-react';
-import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+// import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
 
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : Platform.OS === 'ios'
-    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
-    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
+// const adUnitId = __DEV__
+//   ? TestIds.ADAPTIVE_BANNER
+//   : Platform.OS === 'ios'
+//     ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+//     : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
 interface SelectPhotoProps {
   documentType: DocumentType;
@@ -128,11 +128,11 @@ export const SelectPhoto = observer(({documentType, onBack}: SelectPhotoProps) =
   const {navio} = useServices();
   const {newPhoto, photos: photosStore} = useStores();
   const photosDb = usePhotosDatabase();
-  const bannerRef = useRef<BannerAd>(null);
+  // const bannerRef = useRef<BannerAd>(null);
 
-  useForeground(() => {
-    Platform.OS === 'ios' && bannerRef.current?.load();
-  });
+  // useForeground(() => {
+  //   Platform.OS === 'ios' && bannerRef.current?.load();
+  // });
 
   React.useLayoutEffect(() => {
     navigation.setOptions({title: 'Take Photo'});
@@ -217,7 +217,6 @@ export const SelectPhoto = observer(({documentType, onBack}: SelectPhotoProps) =
           isSubmitting={isSubmitting}
           hasPhoto={!!photo}
         />
-        <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
       </View>
     </Screen>
   );

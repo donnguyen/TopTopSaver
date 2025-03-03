@@ -3,13 +3,13 @@ import {View, Text, Card, Colors} from 'react-native-ui-lib';
 import {Screen} from '@app/components/screen';
 import {ScrollView, Linking, StyleSheet, useWindowDimensions, Platform} from 'react-native';
 import {Image} from 'expo-image';
-import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+// import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
 
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : Platform.OS === 'ios'
-    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
-    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
+// const adUnitId = __DEV__
+//   ? TestIds.ADAPTIVE_BANNER
+//   : Platform.OS === 'ios'
+//     ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+//     : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
 const blurhash =
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
@@ -18,11 +18,11 @@ const PADDING = 32; // total horizontal padding (16 * 2 for container padding-s4
 const IMAGE_PADDING = 24; // total padding in Card (12 * 2 for padding-s3)
 
 export function Guides() {
-  const bannerRef = useRef<BannerAd>(null);
+  // const bannerRef = useRef<BannerAd>(null);
 
-  useForeground(() => {
-    Platform.OS === 'ios' && bannerRef.current?.load();
-  });
+  // useForeground(() => {
+  //   Platform.OS === 'ios' && bannerRef.current?.load();
+  // });
   const {width: windowWidth} = useWindowDimensions();
   const [imageSize, setImageSize] = useState({width: 0, height: 0});
 
@@ -199,7 +199,6 @@ export function Guides() {
           </View>
         </View>
       </ScrollView>
-      <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
     </Screen>
   );
 }

@@ -14,15 +14,15 @@ import {DocumentType} from '@app/utils/types/document';
 import {DocumentItem} from '@app/components/document/document-item';
 import {sortDocuments} from '@app/utils/document';
 import {SelectPhoto} from './new-photo/select-photo';
-import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+// import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
 
 // Ensure the imported data is typed correctly and sorted
 const documentTypes: DocumentType[] = sortDocuments(allDocumentTypes);
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : Platform.OS === 'ios'
-    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
-    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
+// const adUnitId = __DEV__
+//   ? TestIds.ADAPTIVE_BANNER
+//   : Platform.OS === 'ios'
+//     ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+//     : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
 const SearchField = observer(
   ({value, onChange}: {value: string; onChange: (text: string) => void}) => (
@@ -99,11 +99,11 @@ export const NewPhoto = observer(() => {
   const {t} = useServices();
   const {newPhoto} = useStores();
   const navigation = useNavigation();
-  const bannerRef = useRef<BannerAd>(null);
+  // const bannerRef = useRef<BannerAd>(null);
 
-  useForeground(() => {
-    Platform.OS === 'ios' && bannerRef.current?.load();
-  });
+  // useForeground(() => {
+  //   Platform.OS === 'ios' && bannerRef.current?.load();
+  // });
 
   // Set navigation options
   React.useLayoutEffect(() => {
@@ -160,7 +160,6 @@ export const NewPhoto = observer(() => {
           />
         </View>
         <Footer hasSelection={!!newPhoto.selectedDocument} onNext={handleNext} />
-        <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
       </View>
     </Screen>
   );

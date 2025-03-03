@@ -12,28 +12,28 @@ import {useStores} from '@app/stores';
 import {usePhotosDatabase} from '@app/services/db/photo';
 import {getCountryFlag} from '@app/utils/document';
 import {Screen} from '@app/components/screen';
-import {
-  BannerAd,
-  BannerAdSize,
-  TestIds,
-  useForeground,
-  InterstitialAd,
-  AdEventType,
-} from 'react-native-google-mobile-ads';
+// import {
+//   BannerAd,
+//   BannerAdSize,
+//   TestIds,
+//   useForeground,
+//   InterstitialAd,
+//   AdEventType,
+// } from 'react-native-google-mobile-ads';
 
-const adUnitId = __DEV__
-  ? TestIds.ADAPTIVE_BANNER
-  : Platform.OS === 'ios'
-    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
-    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
+// const adUnitId = __DEV__
+//   ? TestIds.ADAPTIVE_BANNER
+//   : Platform.OS === 'ios'
+//     ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+//     : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
-const adInterstitialUnitId = __DEV__
-  ? TestIds.INTERSTITIAL
-  : Platform.OS === 'ios'
-    ? process.env.EXPO_PUBLIC_IOS_ADS_INTERSTITIAL_UNIT_ID ?? ''
-    : process.env.EXPO_PUBLIC_ANDROID_ADS_INTERSTITIAL_UNIT_ID ?? '';
+// const adInterstitialUnitId = __DEV__
+//   ? TestIds.INTERSTITIAL
+//   : Platform.OS === 'ios'
+//     ? process.env.EXPO_PUBLIC_IOS_ADS_INTERSTITIAL_UNIT_ID ?? ''
+//     : process.env.EXPO_PUBLIC_ANDROID_ADS_INTERSTITIAL_UNIT_ID ?? '';
 
-const interstitial = InterstitialAd.createForAdRequest(adInterstitialUnitId, {});
+// const interstitial = InterstitialAd.createForAdRequest(adInterstitialUnitId, {});
 
 const {width} = Dimensions.get('window');
 const IMAGE_WIDTH = width - 32; // 16px padding on each side
@@ -67,48 +67,48 @@ export const PhotoDetails: NavioScreen = observer(() => {
   const photosDb = usePhotosDatabase();
   const pollingTimeoutRef = useRef<NodeJS.Timeout>();
   const imageRef = useRef<Image>(null);
-  const bannerRef = useRef<BannerAd>(null);
+  // const bannerRef = useRef<BannerAd>(null);
 
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
-      setLoaded(true);
-    });
+  // useEffect(() => {
+  //   const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+  //     setLoaded(true);
+  //   });
 
-    const unsubscribeOpened = interstitial.addAdEventListener(AdEventType.OPENED, () => {
-      if (Platform.OS === 'ios') {
-        // Prevent the close button from being unreachable by hiding the status bar on iOS
-        StatusBar.setHidden(true);
-      }
-    });
+  //   const unsubscribeOpened = interstitial.addAdEventListener(AdEventType.OPENED, () => {
+  //     if (Platform.OS === 'ios') {
+  //       // Prevent the close button from being unreachable by hiding the status bar on iOS
+  //       StatusBar.setHidden(true);
+  //     }
+  //   });
 
-    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
-      if (Platform.OS === 'ios') {
-        StatusBar.setHidden(false);
-      }
-    });
+  //   const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+  //     if (Platform.OS === 'ios') {
+  //       StatusBar.setHidden(false);
+  //     }
+  //   });
 
-    // Start loading the interstitial straight away
-    interstitial.load();
+  //   // Start loading the interstitial straight away
+  //   interstitial.load();
 
-    // Unsubscribe from events on unmount
-    return () => {
-      unsubscribeLoaded();
-      unsubscribeOpened();
-      unsubscribeClosed();
-    };
-  }, []);
+  //   // Unsubscribe from events on unmount
+  //   return () => {
+  //     unsubscribeLoaded();
+  //     unsubscribeOpened();
+  //     unsubscribeClosed();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    if (loaded && params.showInterstitialAds) {
-      interstitial.show();
-    }
-  }, [loaded, params.showInterstitialAds]);
+  // useEffect(() => {
+  //   if (loaded && params.showInterstitialAds) {
+  //     interstitial.show();
+  //   }
+  // }, [loaded, params.showInterstitialAds]);
 
-  useForeground(() => {
-    Platform.OS === 'ios' && bannerRef.current?.load();
-  });
+  // useForeground(() => {
+  //   Platform.OS === 'ios' && bannerRef.current?.load();
+  // });
 
   // Get the photo from store instead of params to ensure reactivity
   const photo = photosStore.photos.find(p => p.id === params.photo.id) ?? params.photo;
@@ -300,7 +300,6 @@ export const PhotoDetails: NavioScreen = observer(() => {
           </Text>
         </View>
       </ScrollView>
-      <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
     </Screen>
   );
 });
