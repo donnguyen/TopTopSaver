@@ -124,3 +124,5 @@ Use these libraries:
 - [MobX](https://github.com/mobxjs/mobx) - simple, scalable state management, with [mobx-persist-store](https://github.com/quarrant/mobx-persist-store) for persisting your stores.
 - [Flash List](https://github.com/Shopify/flash-list) - a better list for React Native (by Shopify).
 - [Expo Image](https://github.com/expo/expo/tree/main/packages/expo-image) - cross-platform React component that loads and renders images.
+
+Important:Never ask me to run the app to see our changes

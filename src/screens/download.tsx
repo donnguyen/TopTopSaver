@@ -4,6 +4,7 @@ import {View, Text, TextField, Button, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
+import {Ionicons} from '@expo/vector-icons';
 
 export const Download = () => {
   const {t} = useServices();
@@ -51,23 +52,34 @@ export const Download = () => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <Screen>
         <View style={styles.container}>
-          <Text text50 marginB-20>
-            Download TikTok Videos
-          </Text>
-
-          <Text text70 marginB-10>
+          <Text text70 marginB-15 style={styles.instructionText}>
             Paste a TikTok video URL below
           </Text>
 
-          <TextField
-            placeholder="https://www.tiktok.com/@username/video/1234567890"
-            value={tiktokUrl}
-            onChangeText={setTiktokUrl}
-            style={styles.input}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-          />
+          <View style={styles.inputWrapper}>
+            <TextField
+              placeholder="https://www.tiktok.com/@username/video/1234567890"
+              value={tiktokUrl}
+              onChangeText={setTiktokUrl}
+              fieldStyle={styles.fieldStyle}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              placeholderTextColor={Colors.grey40}
+              trailingAccessory={
+                tiktokUrl ? (
+                  <TouchableWithoutFeedback onPress={() => setTiktokUrl('')}>
+                    <Ionicons
+                      name="close-circle"
+                      size={20}
+                      color={Colors.grey40}
+                      style={styles.clearIcon}
+                    />
+                  </TouchableWithoutFeedback>
+                ) : undefined
+              }
+            />
+          </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -76,10 +88,13 @@ export const Download = () => {
             onPress={handleDownload}
             disabled={isLoading || !tiktokUrl}
             style={styles.button}
-            backgroundColor={Colors.blue30}
-            disabledBackgroundColor={Colors.blue60}
+            backgroundColor={Colors.primary}
+            disabledBackgroundColor={Colors.grey50}
             marginT-20
           />
+          <Text text80 marginT-5 style={styles.subtitleText}>
+            without watermark
+          </Text>
 
           <Text text80 marginT-30 style={styles.disclaimer}>
             This app allows you to download TikTok videos without watermarks for personal use only.
@@ -98,22 +113,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
-  input: {
+  instructionText: {
+    fontWeight: '500',
+    color: Colors.grey10,
+  },
+  inputWrapper: {
     width: '100%',
-    borderWidth: 1,
-    borderColor: Colors.grey50,
+  },
+  fieldStyle: {
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.grey60,
+    paddingHorizontal: 16,
+    height: 48,
+  },
+  clearIcon: {
+    padding: 4,
   },
   button: {
     width: '100%',
-    height: 50,
-    borderRadius: 8,
+    height: 56,
+    borderRadius: 12,
+  },
+  subtitleText: {
+    color: Colors.grey30,
+    fontWeight: '500',
   },
   errorText: {
     color: Colors.red30,
-    marginBottom: 10,
+    marginTop: 8,
     alignSelf: 'flex-start',
   },
   disclaimer: {
