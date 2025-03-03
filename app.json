@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Don Mobile Base",
-    "slug": "don-mobile-base",
+    "name": "TopTopSaver - Downloader for TikTok",
+    "slug": "top-top-saver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "donmobilebase",
+    "scheme": "top-top-saver",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -18,7 +18,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "online.donmobilebase",
+      "bundleIdentifier": "com.hazuu.toptopsaver",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -29,7 +29,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "online.donmobilebase",
+      "package": "com.hazuu.toptopsaver",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
