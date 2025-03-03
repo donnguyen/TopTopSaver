@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {StyleSheet, Keyboard, TouchableWithoutFeedback, TouchableOpacity} from 'react-native';
 import {View, Text, TextField, Button, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
@@ -6,6 +6,8 @@ import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
 import {Ionicons} from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import {useVideosDatabase} from '@app/services/db';
+import {APIError} from '@app/services/api/tiktok';
 
 // Define TikTok URL patterns
 const TIKTOK_URL_PATTERNS = [
@@ -22,8 +24,9 @@ const TIKTOK_URL_PATTERNS = [
 ];
 
 export const Download = () => {
-  const {t} = useServices();
+  const {t, api} = useServices();
   const navigation = useNavigation();
+  const videosDb = useVideosDatabase();
   const [tiktokUrl, setTiktokUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -49,9 +52,17 @@ export const Download = () => {
     setIsLoading(true);
 
     try {
-      // Here we would implement the actual download logic
-      // For now, we'll just simulate a download with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the TikTok API to download the video
+      const response = await api.tiktok.downloadVideo(tiktokUrl);
+
+      if (response.code !== 0 || !response.data) {
+        setError('Unable to download this video. Please try a different link.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Save the video metadata to the database (actual download will be implemented later)
+      await videosDb.saveVideo(response.data);
 
       // Reset the form after successful download
       setTiktokUrl('');
@@ -61,7 +72,13 @@ export const Download = () => {
       // @ts-ignore - Using string navigation with Navio
       navigation.navigate('LibraryTab');
     } catch (err) {
-      setError('Failed to download video. Please try again.');
+      console.error('Download error:', err);
+
+      if (err instanceof APIError) {
+        setError(`Download failed: ${err.message}`);
+      } else {
+        setError('Failed to download video. Please try again.');
+      }
       setIsLoading(false);
     }
   };

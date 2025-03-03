@@ -11,30 +11,39 @@ export type Auth$Login$Response = {
   data: any;
 };
 
-export interface FormDataFile {
-  uri: string;
-  type: string;
-  name: string;
+// TikTok API
+export interface TikTokVideoResponse {
+  code: number;
+  msg: string;
+  processed_time: number;
+  data?: TikTokVideoData;
 }
 
-export interface PhotoResponse {
-  id: number;
-  jobId: string;
-  preset: string;
-  createdAt: string;
-  updatedAt: string;
-  originalUrl: string;
-  resultHdUrl: string;
-  url: string;
-  country: string;
-  documentType: string;
-  dimension: string;
-  status: 'processing' | 'completed' | 'failed';
-}
-
-export interface PhotoUploadPayload {
-  photo: {
-    original: FormDataFile;
-    preset: string;
+export interface TikTokVideoData {
+  id: string;
+  title: string;
+  cover: string;
+  duration: number;
+  hdplay: string;
+  hd_size: number;
+  author: {
+    id: string;
+    unique_id: string;
+    nickname: string;
+    avatar: string;
   };
+}
+
+export interface VideoRecord {
+  id: string;
+  title: string;
+  cover: string;
+  duration: number;
+  hdplay: string;
+  hd_size: number;
+  author_unique_id: string;
+  author_nickname: string;
+  author_avatar: string;
+  created_at: string;
+  status: 'downloading' | 'downloaded' | 'failed';
 }
