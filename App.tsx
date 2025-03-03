@@ -70,10 +70,8 @@ export default (): JSX.Element => {
               prefixes: [Linking.createURL('/')],
             },
           }}
-
-          // [Tip]
-          // You can use `root` to change the root of the app depending on global state changes.
-          // root={isLoggedIn ? 'AuthStack' : 'AppTabs'}
+          // Use only our TikTok downloader tabs
+          root="tabs.AppTabs"
         />
       </AppProvider>
     </GestureHandlerRootView>

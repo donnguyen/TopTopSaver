@@ -170,14 +170,11 @@ export const getTabBarIcon =
   );
 
 const getTabIconName = (tabName: string, focused: boolean): IconName => {
-  if (tabName === 'PassportPhotosTab') {
-    return focused ? 'images' : 'images-outline';
+  if (tabName === 'DownloadTab') {
+    return focused ? 'cloud-download' : 'cloud-download-outline';
   }
-  if (tabName === 'NewPhotoTab') {
-    return focused ? 'camera' : 'camera-outline';
-  }
-  if (tabName === 'GuidesTab') {
-    return focused ? 'book' : 'book-outline';
+  if (tabName === 'LibraryTab') {
+    return focused ? 'library' : 'library-outline';
   }
 
   return 'list';

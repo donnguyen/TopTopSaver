@@ -1,9 +1,7 @@
 import {Navio} from 'rn-navio';
 
-import {PassportPhotos} from '@app/screens/passport-photos';
-import {NewPhoto} from '@app/screens/new-photo';
-import {Guides} from '@app/screens/guides';
-import {PhotoDetails} from '@app/screens/passport-photos/photo-details';
+import {Download} from '@app/screens/download';
+import {Library} from '@app/screens/library';
 
 import {useAppearance} from '@app/utils/hooks';
 import {
@@ -17,38 +15,32 @@ import {services} from '@app/services';
 // NAVIO
 export const navio = Navio.build({
   screens: {
-    PassportPhotos,
-    NewPhoto,
-    Guides,
-    PhotoDetails,
+    Download,
+    Library,
   },
   stacks: {
-    PassportPhotosStack: ['PassportPhotos', 'PhotoDetails'],
-    NewPhotoStack: ['NewPhoto'],
-    GuidesStack: ['Guides'],
+    DownloadStack: ['Download'],
+    LibraryStack: ['Library'],
   },
   tabs: {
     AppTabs: {
+      screenOptions: {
+        headerShown: false,
+      },
+      initialRouteName: 'DownloadTab',
       layout: {
-        PassportPhotosTab: {
-          stack: 'PassportPhotosStack',
+        DownloadTab: {
+          stack: 'DownloadStack',
           options: () => ({
-            title: 'Passport Photos',
-            tabBarIcon: getTabBarIcon('PassportPhotosTab'),
+            title: 'Download',
+            tabBarIcon: getTabBarIcon('DownloadTab'),
           }),
         },
-        NewPhotoTab: {
-          stack: 'NewPhotoStack',
+        LibraryTab: {
+          stack: 'LibraryStack',
           options: () => ({
-            title: 'New Photo',
-            tabBarIcon: getTabBarIcon('NewPhotoTab'),
-          }),
-        },
-        GuidesTab: {
-          stack: 'GuidesStack',
-          options: () => ({
-            title: 'Guides',
-            tabBarIcon: getTabBarIcon('GuidesTab'),
+            title: 'Library',
+            tabBarIcon: getTabBarIcon('LibraryTab'),
           }),
         },
       },
