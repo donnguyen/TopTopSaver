@@ -8,6 +8,7 @@ import {Ionicons} from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import {useVideosDatabase} from '@app/services/db';
 import {APIError} from '@app/services/api/tiktok';
+import {useVideosStore} from '@app/stores/videos.store';
 
 // Define TikTok URL patterns
 const TIKTOK_URL_PATTERNS = [
@@ -26,7 +27,7 @@ const TIKTOK_URL_PATTERNS = [
 export const Download = () => {
   const {t, api} = useServices();
   const navigation = useNavigation();
-  const videosDb = useVideosDatabase();
+  const {saveVideo} = useVideosStore();
   const [tiktokUrl, setTiktokUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -61,8 +62,8 @@ export const Download = () => {
         return;
       }
 
-      // Save the video metadata to the database (actual download will be implemented later)
-      await videosDb.saveVideo(response.data);
+      // Save the video metadata to the database and update the store
+      await saveVideo(response.data);
 
       // Reset the form after successful download
       setTiktokUrl('');

@@ -1,5 +1,5 @@
 import {makeAutoObservable, runInAction} from 'mobx';
-import {VideoRecord} from '@app/utils/types/api';
+import {VideoRecord, TikTokVideoData} from '@app/utils/types/api';
 import {useVideosDatabase} from '@app/services/db';
 import {useStores} from './index';
 import {useCallback} from 'react';
@@ -103,6 +103,35 @@ export class VideosStore {
       });
     }
   };
+
+  // Add a new method to save a video to the database and update the store
+  saveVideoToDb = async (
+    videoData: TikTokVideoData,
+    videosDb: ReturnType<typeof useVideosDatabase>,
+  ) => {
+    try {
+      // Save to database
+      await videosDb.saveVideo(videoData);
+
+      // Get the video from the database to ensure we have the correct format
+      const videos = await videosDb.getVideos();
+      const savedVideo = videos.find(v => v.id === videoData.id);
+
+      if (savedVideo) {
+        // Update the store with the saved video
+        runInAction(() => {
+          this.addVideo(savedVideo);
+        });
+      }
+
+      return true;
+    } catch (error) {
+      runInAction(() => {
+        this.setError(error instanceof Error ? error.message : 'Failed to save video');
+      });
+      return false;
+    }
+  };
 }
 
 // Custom hook to use the videos store with the database
@@ -128,6 +157,14 @@ export const useVideosStore = () => {
     [videosStore, videosDb],
   );
 
+  // Add a new method to save a video
+  const saveVideo = useCallback(
+    (videoData: TikTokVideoData) => {
+      return videosStore.saveVideoToDb(videoData, videosDb);
+    },
+    [videosStore, videosDb],
+  );
+
   return {
     videos: videosStore.videos,
     isLoading: videosStore.isLoading,
@@ -135,5 +172,6 @@ export const useVideosStore = () => {
     loadVideos,
     deleteVideo,
     updateVideoStatus,
+    saveVideo,
   };
 };
