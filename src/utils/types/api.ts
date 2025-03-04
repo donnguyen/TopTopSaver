@@ -26,6 +26,8 @@ export interface TikTokVideoData {
   duration: number;
   hdplay: string;
   hd_size: number;
+  play: string;
+  size: number;
   author: {
     id: string;
     unique_id: string;
@@ -41,6 +43,8 @@ export interface VideoRecord {
   duration: number;
   hdplay: string;
   hd_size: number;
+  play: string;
+  size: number;
   author_unique_id: string;
   author_nickname: string;
   author_avatar: string;

@@ -11,6 +11,8 @@ const CREATE_VIDEOS_TABLE = `
     duration INTEGER NOT NULL,
     hdplay TEXT NOT NULL,
     hd_size INTEGER NOT NULL,
+    play TEXT NOT NULL,
+    size INTEGER NOT NULL,
     author_unique_id TEXT NOT NULL,
     author_nickname TEXT NOT NULL,
     author_avatar TEXT NOT NULL,
@@ -55,6 +57,8 @@ export function useVideosDatabase(): VideosDatabase {
           duration: videoData.duration,
           hdplay: videoData.hdplay,
           hd_size: videoData.hd_size,
+          play: videoData.play,
+          size: videoData.size,
           author_unique_id: videoData.author.unique_id,
           author_nickname: videoData.author.nickname,
           author_avatar: videoData.author.avatar,
@@ -64,9 +68,9 @@ export function useVideosDatabase(): VideosDatabase {
 
         await db.runAsync(
           `INSERT OR REPLACE INTO videos (
-            id, title, cover, duration, hdplay, hd_size, 
+            id, title, cover, duration, hdplay, hd_size, play, size,
             author_unique_id, author_nickname, author_avatar, created_at, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             videoRecord.id,
             videoRecord.title,
@@ -74,6 +78,8 @@ export function useVideosDatabase(): VideosDatabase {
             videoRecord.duration,
             videoRecord.hdplay,
             videoRecord.hd_size,
+            videoRecord.play,
+            videoRecord.size,
             videoRecord.author_unique_id,
             videoRecord.author_nickname,
             videoRecord.author_avatar,

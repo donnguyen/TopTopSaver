@@ -83,7 +83,7 @@ export const Library = observer(() => {
               {new Date(item.created_at).toLocaleDateString()}
             </Text>
             <Text text80 grey40>
-              {formatFileSize(item.hd_size)}
+              {formatFileSize(item.size)}
             </Text>
           </View>
           <View row spread marginT-5>
