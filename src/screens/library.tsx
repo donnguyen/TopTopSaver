@@ -1,55 +1,39 @@
-import React, {useState} from 'react';
-import {StyleSheet, FlatList, Dimensions} from 'react-native';
+import React, {useCallback} from 'react';
+import {StyleSheet, Dimensions} from 'react-native';
 import {View, Text, Card, Colors, Image, Button} from 'react-native-ui-lib';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
+import {FlashList} from '@shopify/flash-list';
+import {VideoRecord} from '@app/utils/types/api';
+import {formatFileSize, formatDuration} from '../utils/formatters';
+import {useVideosStore} from '@app/stores/videos.store';
+import {observer} from 'mobx-react-lite';
 
-// Define the video item type
-interface VideoItem {
-  id: string;
-  title: string;
-  thumbnail: string;
-  date: string;
-  size: string;
-  duration: string;
-}
-
-// Mock data for downloaded videos
-const MOCK_VIDEOS: VideoItem[] = [
-  {
-    id: '1',
-    title: 'TikTok Video 1',
-    thumbnail: 'https://via.placeholder.com/150',
-    date: '2023-06-15',
-    size: '12.5 MB',
-    duration: '00:30',
-  },
-  {
-    id: '2',
-    title: 'TikTok Video 2',
-    thumbnail: 'https://via.placeholder.com/150',
-    date: '2023-06-14',
-    size: '8.2 MB',
-    duration: '00:15',
-  },
-  // Add more mock videos as needed
-];
-
-export const Library = () => {
+export const Library = observer(() => {
   const {t} = useServices();
   const navigation = useNavigation();
-  const [videos, setVideos] = useState<VideoItem[]>(MOCK_VIDEOS);
+  const {videos, isLoading, loadVideos, deleteVideo} = useVideosStore();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadVideos();
+    }, [loadVideos]),
+  );
 
   const handlePlayVideo = (videoId: string) => {
-    // Implement video playback functionality
-    console.log(`Playing video with ID: ${videoId}`);
+    // Navigate to the VideoPlayer screen with the video ID
+    // @ts-ignore - Using string navigation with Navio
+    navigation.navigate('VideoPlayer', {videoId});
   };
 
-  const handleDeleteVideo = (videoId: string) => {
-    // Filter out the deleted video
-    setVideos(videos.filter(video => video.id !== videoId));
+  const handleDeleteVideo = async (videoId: string) => {
+    await deleteVideo(videoId);
   };
+
+  const handleRefresh = useCallback(() => {
+    loadVideos();
+  }, [loadVideos]);
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -71,19 +55,30 @@ export const Library = () => {
     </View>
   );
 
-  const renderVideoItem = ({item}: {item: VideoItem}) => (
-    <Card style={styles.videoCard} onPress={() => handlePlayVideo(item.id)}>
-      <Image source={{uri: item.thumbnail}} style={styles.thumbnail} cover />
+  const renderVideoItem = ({item}: {item: VideoRecord}) => (
+    <Card
+      style={styles.videoCard}
+      onPress={() => item.status === 'downloaded' && handlePlayVideo(item.id)}
+    >
+      <Image source={{uri: item.cover}} style={styles.thumbnail} cover />
       <View padding-10>
         <Text text70 numberOfLines={1}>
           {item.title}
         </Text>
         <View row spread marginT-5>
           <Text text80 grey40>
-            {item.date}
+            {new Date(item.created_at).toLocaleDateString()}
           </Text>
           <Text text80 grey40>
-            {item.size}
+            {formatFileSize(item.hd_size)}
+          </Text>
+        </View>
+        <View row spread marginT-5>
+          <Text text80 grey40>
+            {formatDuration(item.duration)}
+          </Text>
+          <Text text80 grey40 style={{color: getStatusColor(item.status)}}>
+            {item.status}
           </Text>
         </View>
         <View row right marginT-10>
@@ -93,6 +88,7 @@ export const Library = () => {
             backgroundColor={Colors.green30}
             marginR-10
             onPress={() => handlePlayVideo(item.id)}
+            disabled={item.status !== 'downloaded'}
           />
           <Button
             size="small"
@@ -105,28 +101,42 @@ export const Library = () => {
     </Card>
   );
 
+  const getStatusColor = (status: VideoRecord['status']) => {
+    switch (status) {
+      case 'downloaded':
+        return Colors.green30;
+      case 'downloading':
+        return Colors.yellow30;
+      case 'failed':
+        return Colors.red30;
+      default:
+        return Colors.grey40;
+    }
+  };
+
   return (
     <Screen>
       <View style={styles.container}>
-        <Text text50 marginB-20 marginT-20>
-          Your Library
-        </Text>
-
-        {videos.length === 0 ? (
+        {videos.length === 0 && !isLoading ? (
           renderEmptyState()
         ) : (
-          <FlatList
-            data={videos}
-            renderItem={renderVideoItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
+          <View style={styles.listContainer}>
+            <FlashList
+              data={videos}
+              renderItem={renderVideoItem}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.listContent}
+              estimatedItemSize={250}
+              showsVerticalScrollIndicator={false}
+              onRefresh={handleRefresh}
+              refreshing={isLoading}
+            />
+          </View>
         )}
       </View>
     </Screen>
   );
-};
+});
 
 const {width} = Dimensions.get('window');
 const cardWidth = width * 0.9;
@@ -136,6 +146,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 10,
+    paddingTop: 10,
+  },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   listContent: {
     paddingBottom: 20,
@@ -145,6 +161,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 10,
     overflow: 'hidden',
+    alignSelf: 'center',
   },
   thumbnail: {
     height: 180,

@@ -15,7 +15,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hazuu.toptopsaver",
@@ -120,7 +122,8 @@
             "3qcr597p9d.skadnetwork"
           ]
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "eas": {

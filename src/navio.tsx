@@ -2,6 +2,7 @@ import {Navio} from 'rn-navio';
 
 import {Download} from '@app/screens/download';
 import {Library} from '@app/screens/library';
+import {VideoPlayer} from '@app/screens/video-player';
 
 import {useAppearance} from '@app/utils/hooks';
 import {
@@ -17,10 +18,11 @@ export const navio = Navio.build({
   screens: {
     Download,
     Library,
+    VideoPlayer,
   },
   stacks: {
     DownloadStack: ['Download'],
-    LibraryStack: ['Library'],
+    LibraryStack: ['Library', 'VideoPlayer'],
   },
   tabs: {
     AppTabs: {
