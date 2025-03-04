@@ -2,7 +2,7 @@ import {makeAutoObservable, runInAction} from 'mobx';
 import {VideoRecord, TikTokVideoData} from '@app/utils/types/api';
 import {useVideosDatabase} from '@app/services/db';
 import {useStores} from './index';
-import {useCallback} from 'react';
+import {useCallback, useEffect} from 'react';
 import {downloadManager, useDownloadManager} from '../services/download';
 
 const LOADING_TIMEOUT = 10000; // 10 seconds
@@ -48,6 +48,10 @@ export class VideosStore {
 
   updateVideoStatus = (id: string, status: VideoRecord['status']) => {
     this.updateVideo(id, {status});
+  };
+
+  updateVideoDownloadPercentage = (id: string, percentage: number) => {
+    this.updateVideo(id, {download_percentage: percentage});
   };
 
   loadVideos = async (videosDb: ReturnType<typeof useVideosDatabase>) => {
@@ -164,51 +168,6 @@ export class VideosStore {
       this.setError(error instanceof Error ? error.message : 'Failed to start video download');
     }
   };
-
-  // Method to check download status and update video status
-  checkDownloadStatus = async (videoId: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
-    try {
-      // Get download progress
-      const progress = downloadManager.getProgress(videoId);
-
-      // If download is complete, update status and local URI
-      if (progress?.isDone) {
-        await this.updateVideoStatusInDb(videoId, 'downloaded', videosDb);
-
-        // If we have a URI from the download progress, save it to the database
-        if (progress.uri) {
-          await videosDb.updateVideoLocalUri(videoId, progress.uri);
-
-          // Also update the video in the store
-          this.updateVideo(videoId, {
-            status: 'downloaded',
-            local_uri: progress.uri,
-          });
-        } else {
-          // If no URI in progress, try to get the file path
-          try {
-            const filePath = await downloadManager.getVideoFilePath(videoId);
-            const exists = await downloadManager.isVideoDownloaded(videoId);
-
-            if (exists) {
-              await videosDb.updateVideoLocalUri(videoId, filePath);
-              this.updateVideo(videoId, {
-                status: 'downloaded',
-                local_uri: filePath,
-              });
-            }
-          } catch (error) {
-            console.error('Failed to get video file path:', error);
-          }
-        }
-      } else if (progress?.error) {
-        await this.updateVideoStatusInDb(videoId, 'failed', videosDb);
-        this.updateVideo(videoId, {status: 'failed'});
-      }
-    } catch (error) {
-      console.error('Failed to check download status:', error);
-    }
-  };
 }
 
 // Create a singleton instance
@@ -218,6 +177,11 @@ const videosStore = new VideosStore();
 export const useVideosStore = () => {
   const videosDb = useVideosDatabase();
   const downloadMgr = useDownloadManager();
+
+  // Set the videos store reference in the download manager
+  useEffect(() => {
+    downloadMgr.setVideosStoreRef(videosStore);
+  }, [downloadMgr]);
 
   const loadVideos = useCallback(async () => {
     await videosStore.loadVideos(videosDb);
@@ -254,13 +218,6 @@ export const useVideosStore = () => {
     [videosDb],
   );
 
-  const checkDownloadStatus = useCallback(
-    async (videoId: string) => {
-      await videosStore.checkDownloadStatus(videoId, videosDb);
-    },
-    [videosDb],
-  );
-
   return {
     videos: videosStore.videos,
     isLoading: videosStore.isLoading,
@@ -270,6 +227,5 @@ export const useVideosStore = () => {
     updateVideoStatus,
     saveVideo,
     startDownload,
-    checkDownloadStatus,
   };
 };

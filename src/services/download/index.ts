@@ -2,28 +2,24 @@ import * as FileSystem from 'expo-file-system';
 import {Platform} from 'react-native';
 import {VideoRecord} from '@app/utils/types/api';
 import {makeAutoObservable} from 'mobx';
-
-// Define download progress type
-export interface DownloadProgress {
-  videoId: string;
-  progress: number; // 0-100
-  bytesWritten: number;
-  contentLength: number;
-  isDone: boolean;
-  error?: string;
-  uri?: string;
-}
+// Import VideosStore type only, not the actual store
+import type {VideosStore} from '@app/stores/videos.store';
 
 // Define download manager class
 export class DownloadManager {
-  // Map to store download progress for each video
-  downloadProgress: Map<string, DownloadProgress> = new Map();
   // Map to store download resumable objects
   private downloadTasks: Map<string, FileSystem.DownloadResumable> = new Map();
+  // Reference to the videos store for updating download progress
+  private videosStoreRef: VideosStore | null = null;
 
   constructor() {
     makeAutoObservable(this);
   }
+
+  // Set the videos store reference
+  setVideosStoreRef = (storeRef: VideosStore) => {
+    this.videosStoreRef = storeRef;
+  };
 
   // Get download directory
   private getDownloadDirectory = async (): Promise<string> => {
@@ -64,6 +60,17 @@ export class DownloadManager {
       const isDownloaded = await this.isVideoDownloaded(video.id);
       if (isDownloaded) {
         console.log(`Video ${video.id} is already downloaded`);
+
+        // Update store with completed status
+        if (this.videosStoreRef) {
+          this.videosStoreRef.updateVideoStatus(video.id, 'downloaded');
+          this.videosStoreRef.updateVideoDownloadPercentage(video.id, 100);
+
+          // Update local URI
+          const filePath = await this.getVideoFilePath(video.id);
+          this.videosStoreRef.updateVideo(video.id, {local_uri: filePath});
+        }
+
         return;
       }
 
@@ -81,14 +88,11 @@ export class DownloadManager {
       // Get local file path
       const filePath = await this.getVideoFilePath(video.id);
 
-      // Initialize progress
-      this.downloadProgress.set(video.id, {
-        videoId: video.id,
-        progress: 0,
-        bytesWritten: 0,
-        contentLength: 0,
-        isDone: false,
-      });
+      // Update store with initial progress
+      if (this.videosStoreRef) {
+        this.videosStoreRef.updateVideoDownloadPercentage(video.id, 0);
+        this.videosStoreRef.updateVideoStatus(video.id, 'downloading');
+      }
 
       // Create download resumable
       const downloadResumable = FileSystem.createDownloadResumable(
@@ -103,14 +107,19 @@ export class DownloadManager {
           const progress =
             (downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite) * 100;
 
-          // Update progress
-          this.downloadProgress.set(video.id, {
-            videoId: video.id,
-            progress,
-            bytesWritten: downloadProgress.totalBytesWritten,
-            contentLength: downloadProgress.totalBytesExpectedToWrite,
-            isDone: progress >= 100,
-          });
+          // Update store with progress
+          if (this.videosStoreRef) {
+            this.videosStoreRef.updateVideoDownloadPercentage(video.id, progress);
+
+            // If download is complete, update status
+            if (progress >= 100) {
+              this.videosStoreRef.updateVideoStatus(video.id, 'downloaded');
+              this.videosStoreRef.updateVideo(video.id, {local_uri: filePath});
+
+              // Clean up
+              this.downloadTasks.delete(video.id);
+            }
+          }
         },
       );
 
@@ -122,14 +131,11 @@ export class DownloadManager {
 
       if (result) {
         // Download completed successfully
-        this.downloadProgress.set(video.id, {
-          videoId: video.id,
-          progress: 100,
-          bytesWritten: 0, // We don't have this info in the result
-          contentLength: 0, // We don't have this info in the result
-          isDone: true,
-          uri: result.uri,
-        });
+        if (this.videosStoreRef) {
+          this.videosStoreRef.updateVideoDownloadPercentage(video.id, 100);
+          this.videosStoreRef.updateVideoStatus(video.id, 'downloaded');
+          this.videosStoreRef.updateVideo(video.id, {local_uri: result.uri});
+        }
 
         // Clean up
         this.downloadTasks.delete(video.id);
@@ -137,17 +143,10 @@ export class DownloadManager {
     } catch (error) {
       console.error(`Error downloading video ${video.id}:`, error);
 
-      // Update progress with error
-      this.downloadProgress.set(video.id, {
-        ...(this.downloadProgress.get(video.id) || {
-          videoId: video.id,
-          progress: 0,
-          bytesWritten: 0,
-          contentLength: 0,
-          isDone: false,
-        }),
-        error: error instanceof Error ? error.message : 'Download failed',
-      });
+      // Update store with error
+      if (this.videosStoreRef) {
+        this.videosStoreRef.updateVideoStatus(video.id, 'failed');
+      }
 
       // Clean up
       this.downloadTasks.delete(video.id);
@@ -175,14 +174,11 @@ export class DownloadManager {
         const result = await downloadTask.resumeAsync();
         if (result) {
           // Download completed successfully
-          this.downloadProgress.set(videoId, {
-            videoId,
-            progress: 100,
-            bytesWritten: 0, // We don't have this info in the result
-            contentLength: 0, // We don't have this info in the result
-            isDone: true,
-            uri: result.uri,
-          });
+          if (this.videosStoreRef) {
+            this.videosStoreRef.updateVideoDownloadPercentage(videoId, 100);
+            this.videosStoreRef.updateVideoStatus(videoId, 'downloaded');
+            this.videosStoreRef.updateVideo(videoId, {local_uri: result.uri});
+          }
 
           // Clean up
           this.downloadTasks.delete(videoId);
@@ -201,9 +197,6 @@ export class DownloadManager {
         // Just remove the task, the download will be aborted
         this.downloadTasks.delete(videoId);
 
-        // Update progress
-        this.downloadProgress.delete(videoId);
-
         // Try to delete the partial file
         const filePath = await this.getVideoFilePath(videoId);
         const fileInfo = await FileSystem.getInfoAsync(filePath);
@@ -214,16 +207,6 @@ export class DownloadManager {
         console.error(`Error canceling download for video ${videoId}:`, error);
       }
     }
-  };
-
-  // Get download progress for a video
-  getProgress = (videoId: string): DownloadProgress | undefined => {
-    return this.downloadProgress.get(videoId);
-  };
-
-  // Get all download progress
-  getAllProgress = (): DownloadProgress[] => {
-    return Array.from(this.downloadProgress.values());
   };
 }
 
