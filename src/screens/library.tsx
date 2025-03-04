@@ -87,29 +87,16 @@ export const Library = observer(() => {
           </Text>
           <View row spread marginT-5>
             <Text text80 grey40>
-              {new Date(item.created_at).toLocaleDateString()}
-            </Text>
-            <Text text80 grey40>
-              {formatFileSize(item.size)}
-            </Text>
-          </View>
-          <View row spread marginT-5>
-            <Text text80 grey40>
               {formatDuration(item.duration)}
             </Text>
             <Text text80 grey40 style={{color: getStatusColor(item.status)}}>
               {item.status}
             </Text>
           </View>
-          <View row right marginT-10>
-            <Button
-              size="small"
-              label="Play"
-              backgroundColor={Colors.green30}
-              marginR-10
-              onPress={() => handlePlayVideo(item.id)}
-              disabled={item.status !== 'downloaded'}
-            />
+          <View row spread marginT-5>
+            <Text text80 grey40>
+              {formatFileSize(item.size)}
+            </Text>
             <Button
               size="small"
               label="Delete"
@@ -149,6 +136,8 @@ export const Library = observer(() => {
               contentContainerStyle={styles.listContent}
               estimatedItemSize={250}
               showsVerticalScrollIndicator={false}
+              numColumns={2}
+              ItemSeparatorComponent={() => <View style={{width: columnGap}} />}
             />
           </View>
         )}
@@ -158,7 +147,8 @@ export const Library = observer(() => {
 });
 
 const {width} = Dimensions.get('window');
-const cardWidth = width * 0.9;
+const columnGap = 10; // Gap between columns
+const cardWidth = (width - 30 - columnGap) / 2; // Account for padding and gap between columns
 
 const styles = StyleSheet.create({
   container: {
@@ -174,16 +164,16 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 20,
+    paddingHorizontal: 5,
   },
   videoCard: {
     width: cardWidth,
     marginBottom: 15,
     borderRadius: 10,
     overflow: 'hidden',
-    alignSelf: 'center',
   },
   thumbnail: {
-    height: 180,
+    height: (cardWidth * 16) / 9, // 9:16 aspect ratio
     width: '100%',
   },
   emptyContainer: {
