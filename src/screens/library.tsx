@@ -1,7 +1,7 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {StyleSheet, Dimensions} from 'react-native';
 import {View, Text, Card, Colors, Image, Button} from 'react-native-ui-lib';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
 import {FlashList} from '@shopify/flash-list';
@@ -15,11 +15,10 @@ export const Library = observer(() => {
   const navigation = useNavigation();
   const {videos, isLoading, loadVideos, deleteVideo} = useVideosStore();
 
-  useFocusEffect(
-    useCallback(() => {
-      loadVideos();
-    }, [loadVideos]),
-  );
+  // Load videos only once when component mounts
+  useEffect(() => {
+    loadVideos();
+  }, []); // Empty dependency array means this runs once on mount
 
   const handlePlayVideo = (videoId: string) => {
     // Navigate to the VideoPlayer screen with the video ID

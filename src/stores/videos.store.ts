@@ -48,6 +48,12 @@ export class VideosStore {
   };
 
   loadVideos = async (videosDb: ReturnType<typeof useVideosDatabase>) => {
+    // Skip if already loading
+    if (this.isLoading) {
+      console.log('Already loading videos, skipping');
+      return;
+    }
+
     this.setIsLoading(true);
     this.setError(null);
 
