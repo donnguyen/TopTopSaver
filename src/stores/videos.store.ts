@@ -135,8 +135,9 @@ export class VideosStore {
           this.addVideo(savedVideo);
         });
 
-        // Start downloading the video
-        await downloadManager.startDownload(savedVideo);
+        // Start downloading the video without awaiting to prevent UI blocking
+        // The download will continue in the background
+        downloadManager.startDownload(savedVideo);
       }
     } catch (error) {
       console.error('Failed to save video:', error);
