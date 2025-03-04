@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect} from 'react';
 import {StyleSheet, Dimensions} from 'react-native';
-import {View, Text, Card, Colors, Image, Button} from 'react-native-ui-lib';
+import {View, Text, Card, Colors, Button} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
@@ -9,6 +9,11 @@ import {VideoRecord} from '@app/utils/types/api';
 import {formatFileSize, formatDuration} from '../utils/formatters';
 import {useVideosStore} from '@app/stores/videos.store';
 import {observer} from 'mobx-react-lite';
+import {Image} from 'expo-image';
+
+// Define a blurhash for placeholder images
+const PLACEHOLDER_BLURHASH =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export const Library = observer(() => {
   const {t} = useServices();
@@ -30,10 +35,6 @@ export const Library = observer(() => {
     await deleteVideo(videoId);
   };
 
-  const handleRefresh = useCallback(() => {
-    loadVideos();
-  }, [loadVideos]);
-
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text text50 marginB-20>
@@ -54,51 +55,65 @@ export const Library = observer(() => {
     </View>
   );
 
-  const renderVideoItem = ({item}: {item: VideoRecord}) => (
-    <Card
-      style={styles.videoCard}
-      onPress={() => item.status === 'downloaded' && handlePlayVideo(item.id)}
-    >
-      <Image source={{uri: item.cover}} style={styles.thumbnail} cover />
-      <View padding-10>
-        <Text text70 numberOfLines={1}>
-          {item.title}
-        </Text>
-        <View row spread marginT-5>
-          <Text text80 grey40>
-            {new Date(item.created_at).toLocaleDateString()}
+  const renderVideoItem = ({item}: {item: VideoRecord}) => {
+    // Create the full thumbnail URL by prefixing with TikWm host
+    const thumbnailUrl = item.cover.startsWith('http')
+      ? item.cover
+      : `https://www.tikwm.com${item.cover}`;
+
+    return (
+      <Card
+        style={styles.videoCard}
+        onPress={() => item.status === 'downloaded' && handlePlayVideo(item.id)}
+      >
+        <Image
+          source={{uri: thumbnailUrl}}
+          style={styles.thumbnail}
+          contentFit="cover"
+          placeholder={PLACEHOLDER_BLURHASH}
+          transition={300}
+          cachePolicy="memory-disk"
+        />
+        <View padding-10>
+          <Text text70 numberOfLines={1}>
+            {item.title}
           </Text>
-          <Text text80 grey40>
-            {formatFileSize(item.hd_size)}
-          </Text>
+          <View row spread marginT-5>
+            <Text text80 grey40>
+              {new Date(item.created_at).toLocaleDateString()}
+            </Text>
+            <Text text80 grey40>
+              {formatFileSize(item.hd_size)}
+            </Text>
+          </View>
+          <View row spread marginT-5>
+            <Text text80 grey40>
+              {formatDuration(item.duration)}
+            </Text>
+            <Text text80 grey40 style={{color: getStatusColor(item.status)}}>
+              {item.status}
+            </Text>
+          </View>
+          <View row right marginT-10>
+            <Button
+              size="small"
+              label="Play"
+              backgroundColor={Colors.green30}
+              marginR-10
+              onPress={() => handlePlayVideo(item.id)}
+              disabled={item.status !== 'downloaded'}
+            />
+            <Button
+              size="small"
+              label="Delete"
+              backgroundColor={Colors.red30}
+              onPress={() => handleDeleteVideo(item.id)}
+            />
+          </View>
         </View>
-        <View row spread marginT-5>
-          <Text text80 grey40>
-            {formatDuration(item.duration)}
-          </Text>
-          <Text text80 grey40 style={{color: getStatusColor(item.status)}}>
-            {item.status}
-          </Text>
-        </View>
-        <View row right marginT-10>
-          <Button
-            size="small"
-            label="Play"
-            backgroundColor={Colors.green30}
-            marginR-10
-            onPress={() => handlePlayVideo(item.id)}
-            disabled={item.status !== 'downloaded'}
-          />
-          <Button
-            size="small"
-            label="Delete"
-            backgroundColor={Colors.red30}
-            onPress={() => handleDeleteVideo(item.id)}
-          />
-        </View>
-      </View>
-    </Card>
-  );
+      </Card>
+    );
+  };
 
   const getStatusColor = (status: VideoRecord['status']) => {
     switch (status) {
@@ -127,8 +142,6 @@ export const Library = observer(() => {
               contentContainerStyle={styles.listContent}
               estimatedItemSize={250}
               showsVerticalScrollIndicator={false}
-              onRefresh={handleRefresh}
-              refreshing={isLoading}
             />
           </View>
         )}
