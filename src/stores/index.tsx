@@ -4,16 +4,12 @@ import './_hydration';
 import {UIStore} from './ui';
 import {CounterStore} from './counter';
 import {AuthStore} from './auth';
-import {NewPhotoStore} from './new-photo.store';
-import {PhotosStore} from './photos.store';
 import {VideosStore} from './videos.store';
 
 class Stores {
   ui = new UIStore();
   counter = new CounterStore();
   auth = new AuthStore();
-  newPhoto = new NewPhotoStore();
-  photos = new PhotosStore();
   videos = new VideosStore();
 }
 export const stores = new Stores();
