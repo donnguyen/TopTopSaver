@@ -37,21 +37,28 @@ export const Library = observer(() => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
+      <Image
+        source={require('../../assets/images/empty-videos.png')}
+        style={styles.emptyImage}
+        contentFit="contain"
+      />
       <Text text50 marginB-20>
         No Videos Yet
       </Text>
       <Text text70 marginB-30 center>
         Videos you download will appear here.
       </Text>
-      <Button
-        label="Go to Download"
+      <Text
+        text70
+        color={Colors.primary}
+        style={styles.downloadLink}
         onPress={() => {
           // @ts-ignore - Using string navigation with Navio
           navigation.navigate('DownloadTab');
         }}
-        backgroundColor={Colors.blue30}
-        borderRadius={8}
-      />
+      >
+        Go to Download
+      </Text>
     </View>
   );
 
@@ -184,5 +191,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  emptyImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  downloadLink: {
+    textDecorationLine: 'underline',
   },
 });

@@ -9,7 +9,7 @@ interface ScreenProps {
   unsafe?: boolean;
 }
 
-export function Screen({children, style, unsafe = false}: ScreenProps) {
+export function Screen({children, style, unsafe = true}: ScreenProps) {
   const Container = unsafe ? View : SafeAreaView;
 
   return (
