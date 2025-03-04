@@ -170,11 +170,39 @@ export class VideosStore {
       // Get download progress
       const progress = downloadManager.getProgress(videoId);
 
-      // If download is complete, update status
+      // If download is complete, update status and local URI
       if (progress?.isDone) {
         await this.updateVideoStatusInDb(videoId, 'downloaded', videosDb);
+
+        // If we have a URI from the download progress, save it to the database
+        if (progress.uri) {
+          await videosDb.updateVideoLocalUri(videoId, progress.uri);
+
+          // Also update the video in the store
+          this.updateVideo(videoId, {
+            status: 'downloaded',
+            local_uri: progress.uri,
+          });
+        } else {
+          // If no URI in progress, try to get the file path
+          try {
+            const filePath = await downloadManager.getVideoFilePath(videoId);
+            const exists = await downloadManager.isVideoDownloaded(videoId);
+
+            if (exists) {
+              await videosDb.updateVideoLocalUri(videoId, filePath);
+              this.updateVideo(videoId, {
+                status: 'downloaded',
+                local_uri: filePath,
+              });
+            }
+          } catch (error) {
+            console.error('Failed to get video file path:', error);
+          }
+        }
       } else if (progress?.error) {
         await this.updateVideoStatusInDb(videoId, 'failed', videosDb);
+        this.updateVideo(videoId, {status: 'failed'});
       }
     } catch (error) {
       console.error('Failed to check download status:', error);

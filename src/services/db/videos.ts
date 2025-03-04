@@ -17,7 +17,8 @@ const CREATE_VIDEOS_TABLE = `
     author_nickname TEXT NOT NULL,
     author_avatar TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'downloading'
+    status TEXT NOT NULL DEFAULT 'downloading',
+    local_uri TEXT
   );
 `;
 
@@ -42,6 +43,7 @@ interface VideosDatabase {
   getVideoById: (id: string) => Promise<VideoRecord | null>;
   deleteVideo: (id: string) => Promise<void>;
   updateVideoStatus: (id: string, status: VideoRecord['status']) => Promise<void>;
+  updateVideoLocalUri: (id: string, localUri: string) => Promise<void>;
 }
 
 export function useVideosDatabase(): VideosDatabase {
@@ -69,8 +71,8 @@ export function useVideosDatabase(): VideosDatabase {
         await db.runAsync(
           `INSERT OR REPLACE INTO videos (
             id, title, cover, duration, hdplay, hd_size, play, size,
-            author_unique_id, author_nickname, author_avatar, created_at, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            author_unique_id, author_nickname, author_avatar, created_at, status, local_uri
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             videoRecord.id,
             videoRecord.title,
@@ -85,6 +87,7 @@ export function useVideosDatabase(): VideosDatabase {
             videoRecord.author_avatar,
             videoRecord.created_at,
             videoRecord.status,
+            null,
           ],
         );
       } catch (error) {
@@ -129,6 +132,15 @@ export function useVideosDatabase(): VideosDatabase {
       } catch (error) {
         console.error('Failed to update video status:', error);
         throw new Error('Failed to update video status in database');
+      }
+    },
+
+    async updateVideoLocalUri(id: string, localUri: string): Promise<void> {
+      try {
+        await db.runAsync('UPDATE videos SET local_uri = ? WHERE id = ?', [localUri, id]);
+      } catch (error) {
+        console.error('Failed to update video local URI:', error);
+        throw new Error('Failed to update video local URI in database');
       }
     },
   };

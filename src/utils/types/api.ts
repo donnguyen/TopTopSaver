@@ -50,4 +50,5 @@ export interface VideoRecord {
   author_avatar: string;
   created_at: string;
   status: 'downloading' | 'downloaded' | 'failed';
+  local_uri?: string;
 }

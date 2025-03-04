@@ -22,6 +22,7 @@ export const VideoPlayer = observer(() => {
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isLocalFile, setIsLocalFile] = useState(false);
 
   // Get the video ID from the route params
   const videoId = route.params?.videoId;
@@ -40,8 +41,14 @@ export const VideoPlayer = observer(() => {
         if (foundVideo) {
           setVideo(foundVideo);
 
-          // Check if the video is downloaded
-          if (foundVideo.status === 'downloaded') {
+          // Check if the video has a local URI
+          if (foundVideo.local_uri) {
+            // Use the stored local URI
+            setVideoUri(foundVideo.local_uri);
+            setIsLocalFile(true);
+          }
+          // If no local URI but status is downloaded, try to get the file path
+          else if (foundVideo.status === 'downloaded') {
             try {
               // Get the local file path
               const filePath = await downloadManager.getVideoFilePath(videoId);
@@ -49,18 +56,22 @@ export const VideoPlayer = observer(() => {
 
               if (isDownloaded) {
                 setVideoUri(filePath);
+                setIsLocalFile(true);
               } else {
                 // If the file doesn't exist but status is downloaded, use the URL
                 setVideoUri(foundVideo.hdplay);
+                setIsLocalFile(false);
                 console.warn('Video marked as downloaded but file not found, using URL instead');
               }
             } catch (err) {
               console.error('Error getting video file:', err);
               setVideoUri(foundVideo.hdplay);
+              setIsLocalFile(false);
             }
           } else {
             // If not downloaded, use the URL
             setVideoUri(foundVideo.hdplay);
+            setIsLocalFile(false);
           }
         } else {
           setError('Video not found');
@@ -152,8 +163,28 @@ export const VideoPlayer = observer(() => {
 
         <View style={styles.sourceInfo}>
           <Text text80 grey40>
-            Source: {videoUri.startsWith('file://') ? 'Local File' : 'Streaming'}
+            Source: {isLocalFile ? 'Local File' : 'Streaming'}
           </Text>
+          {isLocalFile ? (
+            <View row centerV marginT-5>
+              <Ionicons name="save" size={16} color={Colors.green30} style={{marginRight: 5}} />
+              <Text text90 color={Colors.green30}>
+                Playing from device storage (no data usage)
+              </Text>
+            </View>
+          ) : (
+            <View row centerV marginT-5>
+              <Ionicons
+                name="cloud-download"
+                size={16}
+                color={Colors.blue30}
+                style={{marginRight: 5}}
+              />
+              <Text text90 color={Colors.blue30}>
+                Streaming from server (uses data)
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.controlsContainer}>

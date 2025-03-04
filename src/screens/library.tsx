@@ -11,6 +11,7 @@ import {useVideosStore} from '@app/stores/videos.store';
 import {observer} from 'mobx-react-lite';
 import {Image} from 'expo-image';
 import {useDownloadManager, DownloadProgress} from '../services/download';
+import {Ionicons} from '@expo/vector-icons';
 
 // Define a blurhash for placeholder images
 const PLACEHOLDER_BLURHASH =
@@ -40,24 +41,24 @@ export const Library = observer(() => {
   useEffect(() => {
     const interval = setInterval(() => {
       // Get all download progress
-      const progress = downloadManager.getAllProgress();
-
-      // Update the state with the progress
+      const allProgress = downloadManager.getAllProgress();
       const progressMap = new Map<string, DownloadProgress>();
-      progress.forEach(p => {
-        progressMap.set(p.videoId, p);
 
-        // Check if download is complete and update video status
-        if (p.isDone || p.error) {
-          checkDownloadStatus(p.videoId);
+      // Update the progress map
+      allProgress.forEach(progress => {
+        progressMap.set(progress.videoId, progress);
+
+        // Check if download is complete or failed and update status
+        if ((progress.isDone || progress.error) && videos.some(v => v.id === progress.videoId)) {
+          checkDownloadStatus(progress.videoId);
         }
       });
 
       setDownloadProgress(progressMap);
-    }, 500); // Update every 500ms
+    }, 500);
 
     return () => clearInterval(interval);
-  }, [downloadManager, checkDownloadStatus]);
+  }, [downloadManager, videos, checkDownloadStatus]);
 
   const handlePlayVideo = (videoId: string) => {
     // Navigate to the VideoPlayer screen with the video ID
@@ -111,6 +112,7 @@ export const Library = observer(() => {
     const isDownloading =
       item.status === 'downloading' || (progress && !progress.isDone && !progress.error);
     const downloadPercent = progress ? progress.progress : 0;
+    const hasLocalFile = item.local_uri !== undefined && item.status === 'downloaded';
 
     return (
       <Card
@@ -125,6 +127,11 @@ export const Library = observer(() => {
           transition={300}
           cachePolicy="memory-disk"
         />
+        {hasLocalFile && (
+          <View style={styles.localBadge}>
+            <Ionicons name="save" size={14} color={Colors.white} />
+          </View>
+        )}
         <View padding-10>
           <Text text70 numberOfLines={1}>
             {item.title}
@@ -294,5 +301,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  localBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: Colors.green30,
+    borderRadius: 10,
+    padding: 2,
   },
 });
