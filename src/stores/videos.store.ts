@@ -3,6 +3,9 @@ import {VideoRecord, TikTokVideoData} from '@app/utils/types/api';
 import {useVideosDatabase} from '@app/services/db';
 import {useStores} from './index';
 import {useCallback} from 'react';
+import {downloadManager, useDownloadManager} from '../services/download';
+
+const LOADING_TIMEOUT = 10000; // 10 seconds
 
 export class VideosStore {
   videos: VideoRecord[] = [];
@@ -58,7 +61,16 @@ export class VideosStore {
     this.setError(null);
 
     try {
-      const videoRecords = await videosDb.getVideos();
+      // Create a timeout promise
+      const timeoutPromise = new Promise<VideoRecord[]>((_, reject) => {
+        setTimeout(() => reject(new Error('Loading videos timed out')), LOADING_TIMEOUT);
+      });
+
+      // Create the actual fetch promise
+      const fetchPromise = videosDb.getVideos();
+
+      // Race the promises
+      const videoRecords = await Promise.race([fetchPromise, timeoutPromise]);
 
       runInAction(() => {
         this.setVideos(videoRecords);
@@ -75,14 +87,12 @@ export class VideosStore {
   deleteVideoFromDb = async (id: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
     try {
       await videosDb.deleteVideo(id);
-
       runInAction(() => {
         this.deleteVideo(id);
       });
     } catch (error) {
-      runInAction(() => {
-        this.setError(error instanceof Error ? error.message : 'Failed to delete video');
-      });
+      console.error('Failed to delete video:', error);
+      this.setError(error instanceof Error ? error.message : 'Failed to delete video');
     }
   };
 
@@ -93,76 +103,133 @@ export class VideosStore {
   ) => {
     try {
       await videosDb.updateVideoStatus(id, status);
-
       runInAction(() => {
         this.updateVideoStatus(id, status);
       });
     } catch (error) {
-      runInAction(() => {
-        this.setError(error instanceof Error ? error.message : 'Failed to update video status');
-      });
+      console.error('Failed to update video status:', error);
+      this.setError(error instanceof Error ? error.message : 'Failed to update video status');
     }
   };
 
-  // Add a new method to save a video to the database and update the store
   saveVideoToDb = async (
     videoData: TikTokVideoData,
     videosDb: ReturnType<typeof useVideosDatabase>,
   ) => {
     try {
-      // Save to database
+      // If the play URL doesn't start with http, prefix it with the host
+      if (videoData.play && !videoData.play.startsWith('http')) {
+        videoData = {
+          ...videoData,
+          play: `https://www.tikwm.com/${videoData.play}`,
+        };
+      }
+
       await videosDb.saveVideo(videoData);
 
-      // Get the video from the database to ensure we have the correct format
-      const videos = await videosDb.getVideos();
-      const savedVideo = videos.find(v => v.id === videoData.id);
+      // Get the saved video to ensure it has the correct format
+      const savedVideo = await videosDb.getVideoById(videoData.id);
 
       if (savedVideo) {
-        // Update the store with the saved video
         runInAction(() => {
           this.addVideo(savedVideo);
         });
+
+        // Start downloading the video
+        await downloadManager.startDownload(savedVideo);
+      }
+    } catch (error) {
+      console.error('Failed to save video:', error);
+      this.setError(error instanceof Error ? error.message : 'Failed to save video');
+    }
+  };
+
+  // Method to start downloading a video
+  startVideoDownload = async (videoId: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
+    try {
+      // Find the video in the store
+      const video = this.videos.find(v => v.id === videoId);
+      if (!video) {
+        throw new Error('Video not found');
       }
 
-      return true;
+      // Update status to downloading
+      await this.updateVideoStatusInDb(videoId, 'downloading', videosDb);
+
+      // Start the download
+      await downloadManager.startDownload(video);
     } catch (error) {
-      runInAction(() => {
-        this.setError(error instanceof Error ? error.message : 'Failed to save video');
-      });
-      return false;
+      console.error('Failed to start video download:', error);
+      this.setError(error instanceof Error ? error.message : 'Failed to start video download');
+    }
+  };
+
+  // Method to check download status and update video status
+  checkDownloadStatus = async (videoId: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
+    try {
+      // Get download progress
+      const progress = downloadManager.getProgress(videoId);
+
+      // If download is complete, update status
+      if (progress?.isDone) {
+        await this.updateVideoStatusInDb(videoId, 'downloaded', videosDb);
+      } else if (progress?.error) {
+        await this.updateVideoStatusInDb(videoId, 'failed', videosDb);
+      }
+    } catch (error) {
+      console.error('Failed to check download status:', error);
     }
   };
 }
 
-// Custom hook to use the videos store with the database
-export const useVideosStore = () => {
-  const {videos: videosStore} = useStores();
-  const videosDb = useVideosDatabase();
+// Create a singleton instance
+const videosStore = new VideosStore();
 
-  const loadVideos = useCallback(() => {
-    return videosStore.loadVideos(videosDb);
-  }, [videosStore, videosDb]);
+// Custom hook to use the videos store
+export const useVideosStore = () => {
+  const videosDb = useVideosDatabase();
+  const downloadMgr = useDownloadManager();
+
+  const loadVideos = useCallback(async () => {
+    await videosStore.loadVideos(videosDb);
+  }, [videosDb]);
 
   const deleteVideo = useCallback(
-    (id: string) => {
-      return videosStore.deleteVideoFromDb(id, videosDb);
+    async (id: string) => {
+      await videosStore.deleteVideoFromDb(id, videosDb);
+
+      // Also cancel any ongoing download and delete the file
+      await downloadMgr.cancelDownload(id);
     },
-    [videosStore, videosDb],
+    [videosDb, downloadMgr],
   );
 
   const updateVideoStatus = useCallback(
-    (id: string, status: VideoRecord['status']) => {
-      return videosStore.updateVideoStatusInDb(id, status, videosDb);
+    async (id: string, status: VideoRecord['status']) => {
+      await videosStore.updateVideoStatusInDb(id, status, videosDb);
     },
-    [videosStore, videosDb],
+    [videosDb],
   );
 
-  // Add a new method to save a video
   const saveVideo = useCallback(
-    (videoData: TikTokVideoData) => {
-      return videosStore.saveVideoToDb(videoData, videosDb);
+    async (videoData: TikTokVideoData) => {
+      await videosStore.saveVideoToDb(videoData, videosDb);
     },
-    [videosStore, videosDb],
+    [videosDb],
+  );
+
+  const startDownload = useCallback(
+    async (videoId: string) => {
+      await videosStore.startVideoDownload(videoId, videosDb);
+    },
+    [videosDb],
+  );
+
+  const checkDownloadStatus = useCallback(
+    async (videoId: string) => {
+      await videosStore.checkDownloadStatus(videoId, videosDb);
+    },
+    [videosDb],
   );
 
   return {
@@ -173,5 +240,7 @@ export const useVideosStore = () => {
     deleteVideo,
     updateVideoStatus,
     saveVideo,
+    startDownload,
+    checkDownloadStatus,
   };
 };

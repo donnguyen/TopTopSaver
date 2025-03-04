@@ -63,13 +63,14 @@ export const Download = () => {
       }
 
       // Save the video metadata to the database and update the store
-      await saveVideo(response.data);
+      // This will also start the download process in the background
+      saveVideo(response.data);
 
       // Reset the form after successful download
       setTiktokUrl('');
       setIsLoading(false);
 
-      // Navigate to Library after successful download
+      // Navigate to Library immediately without waiting for the download to start
       // @ts-ignore - Using string navigation with Navio
       navigation.navigate('LibraryTab');
     } catch (err) {

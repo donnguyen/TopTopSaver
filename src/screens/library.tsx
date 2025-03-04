@@ -1,6 +1,6 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {StyleSheet, Dimensions} from 'react-native';
-import {View, Text, Card, Colors, Button} from 'react-native-ui-lib';
+import {View, Text, Card, Colors, Button, ProgressBar} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
@@ -10,6 +10,7 @@ import {formatFileSize, formatDuration} from '../utils/formatters';
 import {useVideosStore} from '@app/stores/videos.store';
 import {observer} from 'mobx-react-lite';
 import {Image} from 'expo-image';
+import {useDownloadManager, DownloadProgress} from '../services/download';
 
 // Define a blurhash for placeholder images
 const PLACEHOLDER_BLURHASH =
@@ -18,12 +19,45 @@ const PLACEHOLDER_BLURHASH =
 export const Library = observer(() => {
   const {t} = useServices();
   const navigation = useNavigation();
-  const {videos, isLoading, loadVideos, deleteVideo} = useVideosStore();
+  const {videos, isLoading, loadVideos, deleteVideo, startDownload, checkDownloadStatus} =
+    useVideosStore();
+  const downloadManager = useDownloadManager();
+  const [downloadProgress, setDownloadProgress] = useState<Map<string, DownloadProgress>>(
+    new Map(),
+  );
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Load videos only once when component mounts
   useEffect(() => {
-    loadVideos();
+    const loadData = async () => {
+      await loadVideos();
+      setInitialLoading(false);
+    };
+    loadData();
   }, []); // Empty dependency array means this runs once on mount
+
+  // Poll for download progress updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Get all download progress
+      const progress = downloadManager.getAllProgress();
+
+      // Update the state with the progress
+      const progressMap = new Map<string, DownloadProgress>();
+      progress.forEach(p => {
+        progressMap.set(p.videoId, p);
+
+        // Check if download is complete and update video status
+        if (p.isDone || p.error) {
+          checkDownloadStatus(p.videoId);
+        }
+      });
+
+      setDownloadProgress(progressMap);
+    }, 500); // Update every 500ms
+
+    return () => clearInterval(interval);
+  }, [downloadManager, checkDownloadStatus]);
 
   const handlePlayVideo = (videoId: string) => {
     // Navigate to the VideoPlayer screen with the video ID
@@ -33,6 +67,10 @@ export const Library = observer(() => {
 
   const handleDeleteVideo = async (videoId: string) => {
     await deleteVideo(videoId);
+  };
+
+  const handleDownloadVideo = async (videoId: string) => {
+    await startDownload(videoId);
   };
 
   const renderEmptyState = () => (
@@ -68,6 +106,12 @@ export const Library = observer(() => {
       ? item.cover
       : `https://www.tikwm.com${item.cover}`;
 
+    // Get download progress for this video
+    const progress = downloadProgress.get(item.id);
+    const isDownloading =
+      item.status === 'downloading' || (progress && !progress.isDone && !progress.error);
+    const downloadPercent = progress ? progress.progress : 0;
+
     return (
       <Card
         style={styles.videoCard}
@@ -97,6 +141,44 @@ export const Library = observer(() => {
             <Text text80 grey40>
               {formatFileSize(item.size)}
             </Text>
+            {item.status === 'downloading' && (
+              <Text text80 grey40>
+                {downloadPercent.toFixed(0)}%
+              </Text>
+            )}
+          </View>
+
+          {isDownloading && (
+            <ProgressBar
+              progress={downloadPercent / 100}
+              style={styles.progressBar}
+              progressColor={Colors.blue30}
+            />
+          )}
+
+          <View row spread marginT-10>
+            {item.status === 'downloaded' ? (
+              <Button
+                size="small"
+                label="Play"
+                backgroundColor={Colors.green30}
+                onPress={() => handlePlayVideo(item.id)}
+              />
+            ) : item.status === 'downloading' ? (
+              <Button
+                size="small"
+                label="Cancel"
+                backgroundColor={Colors.orange30}
+                onPress={() => handleDeleteVideo(item.id)}
+              />
+            ) : (
+              <Button
+                size="small"
+                label="Download"
+                backgroundColor={Colors.blue30}
+                onPress={() => handleDownloadVideo(item.id)}
+              />
+            )}
             <Button
               size="small"
               label="Delete"
@@ -121,6 +203,19 @@ export const Library = observer(() => {
         return Colors.grey40;
     }
   };
+
+  // Show loading indicator when initially loading
+  if (initialLoading) {
+    return (
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <Text text60 marginB-20>
+            Loading Videos...
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -189,5 +284,15 @@ const styles = StyleSheet.create({
   },
   downloadLink: {
     textDecorationLine: 'underline',
+  },
+  progressBar: {
+    marginTop: 5,
+    height: 6,
+    borderRadius: 3,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

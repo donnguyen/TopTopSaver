@@ -10,13 +10,16 @@ import {useEvent} from 'expo';
 import {Ionicons} from '@expo/vector-icons';
 import {useVideosStore} from '@app/stores/videos.store';
 import {observer} from 'mobx-react-lite';
+import {useDownloadManager} from '../services/download';
 
 export const VideoPlayer = observer(() => {
   const {t} = useServices();
   const navigation = useNavigation();
   const route = useRoute<any>();
   const {videos} = useVideosStore();
+  const downloadManager = useDownloadManager();
   const [video, setVideo] = useState<VideoRecord | null>(null);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,19 +34,46 @@ export const VideoPlayer = observer(() => {
   );
 
   useEffect(() => {
-    if (videoId) {
-      const foundVideo = findVideo(videoId);
-      if (foundVideo) {
-        setVideo(foundVideo);
+    const loadVideo = async () => {
+      if (videoId) {
+        const foundVideo = findVideo(videoId);
+        if (foundVideo) {
+          setVideo(foundVideo);
+
+          // Check if the video is downloaded
+          if (foundVideo.status === 'downloaded') {
+            try {
+              // Get the local file path
+              const filePath = await downloadManager.getVideoFilePath(videoId);
+              const isDownloaded = await downloadManager.isVideoDownloaded(videoId);
+
+              if (isDownloaded) {
+                setVideoUri(filePath);
+              } else {
+                // If the file doesn't exist but status is downloaded, use the URL
+                setVideoUri(foundVideo.hdplay);
+                console.warn('Video marked as downloaded but file not found, using URL instead');
+              }
+            } catch (err) {
+              console.error('Error getting video file:', err);
+              setVideoUri(foundVideo.hdplay);
+            }
+          } else {
+            // If not downloaded, use the URL
+            setVideoUri(foundVideo.hdplay);
+          }
+        } else {
+          setError('Video not found');
+        }
+        setLoading(false);
       } else {
-        setError('Video not found');
+        setError('No video ID provided');
+        setLoading(false);
       }
-      setLoading(false);
-    } else {
-      setError('No video ID provided');
-      setLoading(false);
-    }
-  }, [videoId, findVideo]);
+    };
+
+    loadVideo();
+  }, [videoId, findVideo, downloadManager]);
 
   const handleBack = () => {
     navigation.goBack();
@@ -62,7 +92,7 @@ export const VideoPlayer = observer(() => {
     );
   }
 
-  if (error || !video) {
+  if (error || !video || !videoUri) {
     return (
       <Screen>
         <View style={styles.container}>
@@ -76,8 +106,8 @@ export const VideoPlayer = observer(() => {
     );
   }
 
-  // Initialize the video player with the video URL
-  const player = useVideoPlayer(video.hdplay, player => {
+  // Initialize the video player with the video URI
+  const player = useVideoPlayer(videoUri, player => {
     player.play();
   });
 
@@ -118,6 +148,12 @@ export const VideoPlayer = observer(() => {
               Author: {video.author_nickname} (@{video.author_unique_id})
             </Text>
           </View>
+        </View>
+
+        <View style={styles.sourceInfo}>
+          <Text text80 grey40>
+            Source: {videoUri.startsWith('file://') ? 'Local File' : 'Streaming'}
+          </Text>
         </View>
 
         <View style={styles.controlsContainer}>
@@ -164,6 +200,10 @@ const styles = StyleSheet.create({
   },
   authorContainer: {
     flex: 1,
+  },
+  sourceInfo: {
+    marginTop: 5,
+    marginBottom: 10,
   },
   controlsContainer: {
     marginTop: 10,
