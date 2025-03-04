@@ -28,7 +28,7 @@ const VideoItem = observer(({item, onPlay}: {item: VideoRecord; onPlay: (id: str
   const isDownloaded = item.status === 'downloaded';
 
   // Use the download_percentage from the store
-  const downloadPercent = item.download_percentage !== undefined ? item.download_percentage : 0;
+  const downloadPercent = item.download_percentage ?? 0;
 
   return (
     <TouchableOpacity
@@ -205,7 +205,7 @@ export const Library = observer(() => {
   );
 });
 
-const getStatusColor = (status: VideoRecord['status']) => {
+export const getStatusColor = (status: VideoRecord['status']) => {
   switch (status) {
     case 'downloaded':
       return Colors.green30;

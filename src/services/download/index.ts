@@ -2,23 +2,28 @@ import * as FileSystem from 'expo-file-system';
 import {Platform} from 'react-native';
 import {VideoRecord} from '@app/utils/types/api';
 import {makeAutoObservable} from 'mobx';
-// Import VideosStore type only, not the actual store
-import type {VideosStore} from '@app/stores/videos.store';
+
+// Define callback types for download events
+export interface DownloadCallbacks {
+  onProgress: (videoId: string, percentage: number) => void;
+  onComplete: (videoId: string, localUri: string) => void;
+  onError: (videoId: string, error: Error) => void;
+}
 
 // Define download manager class
 export class DownloadManager {
   // Map to store download resumable objects
   private downloadTasks: Map<string, FileSystem.DownloadResumable> = new Map();
-  // Reference to the videos store for updating download progress
-  private videosStoreRef: VideosStore | null = null;
+  // Callbacks for download events
+  private callbacks: DownloadCallbacks | null = null;
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  // Set the videos store reference
-  setVideosStoreRef = (storeRef: VideosStore) => {
-    this.videosStoreRef = storeRef;
+  // Set callbacks for download events
+  setCallbacks = (callbacks: DownloadCallbacks) => {
+    this.callbacks = callbacks;
   };
 
   // Get download directory
@@ -61,14 +66,10 @@ export class DownloadManager {
       if (isDownloaded) {
         console.log(`Video ${video.id} is already downloaded`);
 
-        // Update store with completed status
-        if (this.videosStoreRef) {
-          this.videosStoreRef.updateVideoStatus(video.id, 'downloaded');
-          this.videosStoreRef.updateVideoDownloadPercentage(video.id, 100);
-
-          // Update local URI
-          const filePath = await this.getVideoFilePath(video.id);
-          this.videosStoreRef.updateVideo(video.id, {local_uri: filePath});
+        // Update status to downloaded
+        if (this.callbacks) {
+          this.callbacks.onProgress(video.id, 100);
+          this.callbacks.onComplete(video.id, await this.getVideoFilePath(video.id));
         }
 
         return;
@@ -88,10 +89,9 @@ export class DownloadManager {
       // Get local file path
       const filePath = await this.getVideoFilePath(video.id);
 
-      // Update store with initial progress
-      if (this.videosStoreRef) {
-        this.videosStoreRef.updateVideoDownloadPercentage(video.id, 0);
-        this.videosStoreRef.updateVideoStatus(video.id, 'downloading');
+      // Update progress to 0
+      if (this.callbacks) {
+        this.callbacks.onProgress(video.id, 0);
       }
 
       // Create download resumable
@@ -107,14 +107,13 @@ export class DownloadManager {
           const progress =
             (downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite) * 100;
 
-          // Update store with progress
-          if (this.videosStoreRef) {
-            this.videosStoreRef.updateVideoDownloadPercentage(video.id, progress);
+          // Update progress via callback
+          if (this.callbacks) {
+            this.callbacks.onProgress(video.id, progress);
 
             // If download is complete, update status
             if (progress >= 100) {
-              this.videosStoreRef.updateVideoStatus(video.id, 'downloaded');
-              this.videosStoreRef.updateVideo(video.id, {local_uri: filePath});
+              this.callbacks.onComplete(video.id, filePath);
 
               // Clean up
               this.downloadTasks.delete(video.id);
@@ -131,10 +130,9 @@ export class DownloadManager {
 
       if (result) {
         // Download completed successfully
-        if (this.videosStoreRef) {
-          this.videosStoreRef.updateVideoDownloadPercentage(video.id, 100);
-          this.videosStoreRef.updateVideoStatus(video.id, 'downloaded');
-          this.videosStoreRef.updateVideo(video.id, {local_uri: result.uri});
+        if (this.callbacks) {
+          this.callbacks.onProgress(video.id, 100);
+          this.callbacks.onComplete(video.id, result.uri);
         }
 
         // Clean up
@@ -143,9 +141,9 @@ export class DownloadManager {
     } catch (error) {
       console.error(`Error downloading video ${video.id}:`, error);
 
-      // Update store with error
-      if (this.videosStoreRef) {
-        this.videosStoreRef.updateVideoStatus(video.id, 'failed');
+      // Notify error via callback
+      if (this.callbacks) {
+        this.callbacks.onError(video.id, error instanceof Error ? error : new Error(String(error)));
       }
 
       // Clean up
@@ -162,6 +160,12 @@ export class DownloadManager {
         // Note: We don't need to update the task as pauseAsync modifies the existing object
       } catch (error) {
         console.error(`Error pausing download for video ${videoId}:`, error);
+        if (this.callbacks) {
+          this.callbacks.onError(
+            videoId,
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        }
       }
     }
   };
@@ -174,10 +178,9 @@ export class DownloadManager {
         const result = await downloadTask.resumeAsync();
         if (result) {
           // Download completed successfully
-          if (this.videosStoreRef) {
-            this.videosStoreRef.updateVideoDownloadPercentage(videoId, 100);
-            this.videosStoreRef.updateVideoStatus(videoId, 'downloaded');
-            this.videosStoreRef.updateVideo(videoId, {local_uri: result.uri});
+          if (this.callbacks) {
+            this.callbacks.onProgress(videoId, 100);
+            this.callbacks.onComplete(videoId, result.uri);
           }
 
           // Clean up
@@ -185,6 +188,12 @@ export class DownloadManager {
         }
       } catch (error) {
         console.error(`Error resuming download for video ${videoId}:`, error);
+        if (this.callbacks) {
+          this.callbacks.onError(
+            videoId,
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        }
       }
     }
   };
@@ -205,6 +214,12 @@ export class DownloadManager {
         }
       } catch (error) {
         console.error(`Error canceling download for video ${videoId}:`, error);
+        if (this.callbacks) {
+          this.callbacks.onError(
+            videoId,
+            error instanceof Error ? error : new Error(String(error)),
+          );
+        }
       }
     }
   };

@@ -51,5 +51,5 @@ export interface VideoRecord {
   created_at: string;
   status: 'downloading' | 'downloaded' | 'failed';
   local_uri?: string;
-  download_percentage?: number;
+  download_percentage: number;
 }

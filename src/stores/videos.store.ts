@@ -3,7 +3,7 @@ import {VideoRecord, TikTokVideoData} from '@app/utils/types/api';
 import {useVideosDatabase} from '@app/services/db';
 import {useStores} from './index';
 import {useCallback, useEffect} from 'react';
-import {downloadManager, useDownloadManager} from '../services/download';
+import {downloadManager, useDownloadManager, DownloadCallbacks} from '../services/download';
 
 const LOADING_TIMEOUT = 10000; // 10 seconds
 
@@ -46,14 +46,6 @@ export class VideosStore {
     this.videos = this.videos.map(video => (video.id === id ? updatedVideoFull : video));
   };
 
-  updateVideoStatus = (id: string, status: VideoRecord['status']) => {
-    this.updateVideo(id, {status});
-  };
-
-  updateVideoDownloadPercentage = (id: string, percentage: number) => {
-    this.updateVideo(id, {download_percentage: percentage});
-  };
-
   loadVideos = async (videosDb: ReturnType<typeof useVideosDatabase>) => {
     // Skip if already loading
     if (this.isLoading) {
@@ -88,6 +80,26 @@ export class VideosStore {
     }
   };
 
+  // Method to handle all video updates in one place
+  updateVideoData = async (
+    id: string,
+    updates: Partial<VideoRecord>,
+    videosDb: ReturnType<typeof useVideosDatabase>,
+  ) => {
+    try {
+      // Update the database
+      await videosDb.updateVideoData(id, updates);
+
+      // Update the store
+      runInAction(() => {
+        this.updateVideo(id, updates);
+      });
+    } catch (error) {
+      console.error('Failed to update video data:', error);
+      this.setError(error instanceof Error ? error.message : 'Failed to update video data');
+    }
+  };
+
   deleteVideoFromDb = async (id: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
     try {
       await videosDb.deleteVideo(id);
@@ -97,22 +109,6 @@ export class VideosStore {
     } catch (error) {
       console.error('Failed to delete video:', error);
       this.setError(error instanceof Error ? error.message : 'Failed to delete video');
-    }
-  };
-
-  updateVideoStatusInDb = async (
-    id: string,
-    status: VideoRecord['status'],
-    videosDb: ReturnType<typeof useVideosDatabase>,
-  ) => {
-    try {
-      await videosDb.updateVideoStatus(id, status);
-      runInAction(() => {
-        this.updateVideoStatus(id, status);
-      });
-    } catch (error) {
-      console.error('Failed to update video status:', error);
-      this.setError(error instanceof Error ? error.message : 'Failed to update video status');
     }
   };
 
@@ -149,6 +145,31 @@ export class VideosStore {
     }
   };
 
+  // Create download callbacks
+  createDownloadCallbacks = (videosDb: ReturnType<typeof useVideosDatabase>): DownloadCallbacks => {
+    return {
+      onProgress: (videoId: string, percentage: number) => {
+        this.updateVideoData(videoId, {download_percentage: percentage}, videosDb);
+      },
+      onComplete: (videoId: string, localUri: string) => {
+        this.updateVideoData(
+          videoId,
+          {
+            local_uri: localUri,
+            status: 'downloaded',
+            download_percentage: 100,
+          },
+          videosDb,
+        );
+      },
+      onError: (videoId: string, error: Error) => {
+        console.error(`Download error for video ${videoId}:`, error);
+        this.updateVideoData(videoId, {status: 'failed'}, videosDb);
+        this.setError(error.message);
+      },
+    };
+  };
+
   // Method to start downloading a video
   startVideoDownload = async (videoId: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
     try {
@@ -159,7 +180,14 @@ export class VideosStore {
       }
 
       // Update status to downloading
-      await this.updateVideoStatusInDb(videoId, 'downloading', videosDb);
+      await this.updateVideoData(
+        videoId,
+        {
+          status: 'downloading',
+          download_percentage: 0,
+        },
+        videosDb,
+      );
 
       // Start the download
       await downloadManager.startDownload(video);
@@ -178,10 +206,11 @@ export const useVideosStore = () => {
   const videosDb = useVideosDatabase();
   const downloadMgr = useDownloadManager();
 
-  // Set the videos store reference in the download manager
+  // Set up download callbacks
   useEffect(() => {
-    downloadMgr.setVideosStoreRef(videosStore);
-  }, [downloadMgr]);
+    const callbacks = videosStore.createDownloadCallbacks(videosDb);
+    downloadMgr.setCallbacks(callbacks);
+  }, [downloadMgr, videosDb]);
 
   const loadVideos = useCallback(async () => {
     await videosStore.loadVideos(videosDb);
@@ -197,9 +226,9 @@ export const useVideosStore = () => {
     [videosDb, downloadMgr],
   );
 
-  const updateVideoStatus = useCallback(
-    async (id: string, status: VideoRecord['status']) => {
-      await videosStore.updateVideoStatusInDb(id, status, videosDb);
+  const updateVideoData = useCallback(
+    async (id: string, updates: Partial<VideoRecord>) => {
+      await videosStore.updateVideoData(id, updates, videosDb);
     },
     [videosDb],
   );
@@ -224,7 +253,7 @@ export const useVideosStore = () => {
     error: videosStore.error,
     loadVideos,
     deleteVideo,
-    updateVideoStatus,
+    updateVideoData,
     saveVideo,
     startDownload,
   };

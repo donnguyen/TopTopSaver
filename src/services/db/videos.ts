@@ -18,6 +18,7 @@ const CREATE_VIDEOS_TABLE = `
     author_avatar TEXT NOT NULL,
     created_at TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'downloading',
+    download_percentage REAL DEFAULT 0,
     local_uri TEXT
   );
 `;
@@ -44,6 +45,8 @@ interface VideosDatabase {
   deleteVideo: (id: string) => Promise<void>;
   updateVideoStatus: (id: string, status: VideoRecord['status']) => Promise<void>;
   updateVideoLocalUri: (id: string, localUri: string) => Promise<void>;
+  updateVideoDownloadPercentage: (id: string, percentage: number) => Promise<void>;
+  updateVideoData: (id: string, updates: Partial<VideoRecord>) => Promise<void>;
 }
 
 export function useVideosDatabase(): VideosDatabase {
@@ -66,13 +69,14 @@ export function useVideosDatabase(): VideosDatabase {
           author_avatar: videoData.author.avatar,
           created_at: new Date().toISOString(),
           status: 'downloading',
+          download_percentage: 0,
         };
 
         await db.runAsync(
           `INSERT OR REPLACE INTO videos (
             id, title, cover, duration, hdplay, hd_size, play, size,
-            author_unique_id, author_nickname, author_avatar, created_at, status, local_uri
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            author_unique_id, author_nickname, author_avatar, created_at, status, download_percentage, local_uri
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             videoRecord.id,
             videoRecord.title,
@@ -87,6 +91,7 @@ export function useVideosDatabase(): VideosDatabase {
             videoRecord.author_avatar,
             videoRecord.created_at,
             videoRecord.status,
+            videoRecord.download_percentage || 0,
             null,
           ],
         );
@@ -141,6 +146,36 @@ export function useVideosDatabase(): VideosDatabase {
       } catch (error) {
         console.error('Failed to update video local URI:', error);
         throw new Error('Failed to update video local URI in database');
+      }
+    },
+
+    async updateVideoDownloadPercentage(id: string, percentage: number): Promise<void> {
+      try {
+        await db.runAsync('UPDATE videos SET download_percentage = ? WHERE id = ?', [
+          percentage,
+          id,
+        ]);
+      } catch (error) {
+        console.error('Failed to update video download percentage:', error);
+        throw new Error('Failed to update video download percentage in database');
+      }
+    },
+
+    async updateVideoData(id: string, updates: Partial<VideoRecord>): Promise<void> {
+      try {
+        // Build the SQL query dynamically based on the provided updates
+        const updateFields = Object.keys(updates)
+          .map(key => `${key} = ?`)
+          .join(', ');
+
+        if (!updateFields) return; // No fields to update
+
+        const values = [...Object.values(updates), id];
+
+        await db.runAsync(`UPDATE videos SET ${updateFields} WHERE id = ?`, values);
+      } catch (error) {
+        console.error('Failed to update video data:', error);
+        throw new Error('Failed to update video data in database');
       }
     },
   };
