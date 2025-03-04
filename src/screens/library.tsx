@@ -71,7 +71,7 @@ const VideoItem = observer(({item, onPlay}: {item: VideoRecord; onPlay: (id: str
         {/* Play icon for downloaded videos */}
         {isDownloaded && (
           <View style={styles.playIconContainer}>
-            <Ionicons name="play-circle" size={40} color={Colors.white} />
+            <Ionicons name="play-circle" size={60} color={Colors.white} />
           </View>
         )}
       </View>
@@ -84,19 +84,9 @@ const VideoItem = observer(({item, onPlay}: {item: VideoRecord; onPlay: (id: str
           <Text text80 grey40>
             {formatDuration(item.duration)}
           </Text>
-          <Text text80 grey40 style={{color: getStatusColor(item.status)}}>
-            {item.status}
-          </Text>
-        </View>
-        <View row spread marginT-5>
           <Text text80 grey40>
-            {formatFileSize(item.hd_size)}
+            {formatFileSize(item.size)}
           </Text>
-          {isDownloading && (
-            <Text text80 grey40>
-              {downloadPercent.toFixed(0)}%
-            </Text>
-          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -277,6 +267,7 @@ const styles = StyleSheet.create({
   },
   playIconContainer: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
