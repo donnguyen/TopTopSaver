@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {StyleSheet, Dimensions} from 'react-native';
-import {View, Text, Card, Colors, Button, ProgressBar} from 'react-native-ui-lib';
+import {StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
+import {View, Text, Card, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
@@ -12,6 +12,7 @@ import {observer} from 'mobx-react-lite';
 import {Image} from 'expo-image';
 import {useDownloadManager, DownloadProgress} from '../services/download';
 import {Ionicons} from '@expo/vector-icons';
+import CircularProgressIndicator from 'react-native-circular-progress-indicator';
 
 // Define a blurhash for placeholder images
 const PLACEHOLDER_BLURHASH =
@@ -112,26 +113,49 @@ export const Library = observer(() => {
     const isDownloading =
       item.status === 'downloading' || (progress && !progress.isDone && !progress.error);
     const downloadPercent = progress ? progress.progress : 0;
-    const hasLocalFile = item.local_uri !== undefined && item.status === 'downloaded';
+    const isDownloaded = item.status === 'downloaded';
 
     return (
-      <Card
+      <TouchableOpacity
         style={styles.videoCard}
-        onPress={() => item.status === 'downloaded' && handlePlayVideo(item.id)}
+        onPress={() => isDownloaded && handlePlayVideo(item.id)}
+        activeOpacity={0.8}
       >
-        <Image
-          source={{uri: thumbnailUrl}}
-          style={styles.thumbnail}
-          contentFit="cover"
-          placeholder={PLACEHOLDER_BLURHASH}
-          transition={300}
-          cachePolicy="memory-disk"
-        />
-        {hasLocalFile && (
-          <View style={styles.localBadge}>
-            <Ionicons name="save" size={14} color={Colors.white} />
-          </View>
-        )}
+        <View style={styles.thumbnailContainer}>
+          <Image
+            source={{uri: thumbnailUrl}}
+            style={styles.thumbnail}
+            contentFit="cover"
+            placeholder={PLACEHOLDER_BLURHASH}
+            transition={300}
+            cachePolicy="memory-disk"
+          />
+
+          {/* Overlay for better visibility of progress indicator */}
+          {isDownloading && (
+            <View style={styles.thumbnailOverlay}>
+              <CircularProgressIndicator
+                value={downloadPercent}
+                radius={30}
+                activeStrokeWidth={5}
+                inActiveStrokeWidth={5}
+                activeStrokeColor={Colors.white}
+                inActiveStrokeColor={'rgba(255, 255, 255, 0.3)'}
+                progressValueColor={Colors.white}
+                valueSuffix={'%'}
+                progressValueStyle={{fontWeight: 'bold', fontSize: 14}}
+              />
+            </View>
+          )}
+
+          {/* Play icon for downloaded videos */}
+          {isDownloaded && (
+            <View style={styles.playIconContainer}>
+              <Ionicons name="play-circle" size={40} color={Colors.white} />
+            </View>
+          )}
+        </View>
+
         <View padding-10>
           <Text text70 numberOfLines={1}>
             {item.title}
@@ -148,53 +172,9 @@ export const Library = observer(() => {
             <Text text80 grey40>
               {formatFileSize(item.size)}
             </Text>
-            {item.status === 'downloading' && (
-              <Text text80 grey40>
-                {downloadPercent.toFixed(0)}%
-              </Text>
-            )}
-          </View>
-
-          {isDownloading && (
-            <ProgressBar
-              progress={downloadPercent / 100}
-              style={styles.progressBar}
-              progressColor={Colors.blue30}
-            />
-          )}
-
-          <View row spread marginT-10>
-            {item.status === 'downloaded' ? (
-              <Button
-                size="small"
-                label="Play"
-                backgroundColor={Colors.green30}
-                onPress={() => handlePlayVideo(item.id)}
-              />
-            ) : item.status === 'downloading' ? (
-              <Button
-                size="small"
-                label="Cancel"
-                backgroundColor={Colors.orange30}
-                onPress={() => handleDeleteVideo(item.id)}
-              />
-            ) : (
-              <Button
-                size="small"
-                label="Download"
-                backgroundColor={Colors.blue30}
-                onPress={() => handleDownloadVideo(item.id)}
-              />
-            )}
-            <Button
-              size="small"
-              label="Delete"
-              backgroundColor={Colors.red30}
-              onPress={() => handleDeleteVideo(item.id)}
-            />
           </View>
         </View>
-      </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -273,10 +253,32 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 10,
     overflow: 'hidden',
+    backgroundColor: Colors.white,
+    shadowColor: Colors.grey40,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  thumbnail: {
+  thumbnailContainer: {
+    position: 'relative',
     height: (cardWidth * 16) / 9, // 9:16 aspect ratio
     width: '100%',
+  },
+  thumbnail: {
+    height: '100%',
+    width: '100%',
+  },
+  thumbnailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playIconContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,
@@ -292,22 +294,9 @@ const styles = StyleSheet.create({
   downloadLink: {
     textDecorationLine: 'underline',
   },
-  progressBar: {
-    marginTop: 5,
-    height: 6,
-    borderRadius: 3,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  localBadge: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: Colors.green30,
-    borderRadius: 10,
-    padding: 2,
   },
 });
