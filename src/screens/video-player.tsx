@@ -1,11 +1,11 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import {StyleSheet, ActivityIndicator} from 'react-native';
 import {View, Text, Colors, Button} from 'react-native-ui-lib';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
 import {VideoRecord} from '@app/utils/types/api';
-import {useVideoPlayer, VideoView} from 'expo-video';
+import {useVideoPlayer, VideoView, VideoPlayer as ExpoVideoPlayer} from 'expo-video';
 import {useEvent} from 'expo';
 import {Ionicons} from '@expo/vector-icons';
 import {useVideosStore} from '@app/stores/videos.store';
@@ -26,6 +26,20 @@ export const VideoPlayer = observer(() => {
 
   // Get the video ID from the route params
   const videoId = route.params?.videoId;
+
+  // Initialize player with a ref to avoid conditional hook calls
+  const playerRef = useRef<ExpoVideoPlayer | null>(null);
+
+  // Initialize the video player with the video URI (using empty string as fallback)
+  const player = useVideoPlayer(videoUri || '', player => {
+    if (videoUri && !loading && !error) {
+      playerRef.current = player;
+      player.play();
+    }
+  });
+
+  // Get the playing state from the player
+  const {isPlaying} = useEvent(player, 'playingChange', {isPlaying: player.playing});
 
   const findVideo = useCallback(
     (id: string) => {
@@ -86,6 +100,13 @@ export const VideoPlayer = observer(() => {
     loadVideo();
   }, [videoId, findVideo, downloadManager]);
 
+  // Effect to handle player when videoUri changes
+  useEffect(() => {
+    if (videoUri && playerRef.current && !loading && !error) {
+      playerRef.current.play();
+    }
+  }, [videoUri, loading, error]);
+
   const handleBack = () => {
     navigation.goBack();
   };
@@ -116,14 +137,6 @@ export const VideoPlayer = observer(() => {
       </Screen>
     );
   }
-
-  // Initialize the video player with the video URI
-  const player = useVideoPlayer(videoUri, player => {
-    player.play();
-  });
-
-  // Get the playing state from the player
-  const {isPlaying} = useEvent(player, 'playingChange', {isPlaying: player.playing});
 
   return (
     <Screen>
