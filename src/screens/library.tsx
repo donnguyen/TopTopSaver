@@ -18,80 +18,105 @@ const PLACEHOLDER_BLURHASH =
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 // Create an observer component for rendering video items
-const VideoItem = observer(({item, onPlay}: {item: VideoRecord; onPlay: (id: string) => void}) => {
-  // Create the full thumbnail URL by prefixing with TikWm host
-  const thumbnailUrl = item.cover.startsWith('http')
-    ? item.cover
-    : `https://www.tikwm.com${item.cover}`;
+const VideoItem = observer(
+  ({
+    item,
+    onPlay,
+    onRetry,
+  }: {
+    item: VideoRecord;
+    onPlay: (id: string) => void;
+    onRetry?: (id: string) => void;
+  }) => {
+    // Create the full thumbnail URL by prefixing with TikWm host
+    const thumbnailUrl = item.cover.startsWith('http')
+      ? item.cover
+      : `https://www.tikwm.com${item.cover}`;
 
-  const isDownloading = item.status === 'downloading';
-  const isDownloaded = item.status === 'downloaded';
+    const isDownloading = item.status === 'downloading';
+    const isDownloaded = item.status === 'downloaded';
+    const isFailed = item.status === 'failed';
 
-  // Use the download_percentage from the store
-  const downloadPercent = item.download_percentage ?? 0;
+    // Use the download_percentage from the store
+    const downloadPercent = item.download_percentage ?? 0;
 
-  return (
-    <TouchableOpacity
-      style={styles.videoCard}
-      onPress={() => isDownloaded && onPlay(item.id)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.thumbnailContainer}>
-        <Image
-          source={{uri: thumbnailUrl}}
-          style={styles.thumbnail}
-          contentFit="cover"
-          placeholder={PLACEHOLDER_BLURHASH}
-          transition={300}
-          cachePolicy="memory-disk"
-        />
+    return (
+      <TouchableOpacity
+        style={styles.videoCard}
+        onPress={() => isDownloaded && onPlay(item.id)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.thumbnailContainer}>
+          <Image
+            source={{uri: thumbnailUrl}}
+            style={styles.thumbnail}
+            contentFit="cover"
+            placeholder={PLACEHOLDER_BLURHASH}
+            transition={300}
+            cachePolicy="memory-disk"
+          />
 
-        {/* Overlay for better visibility of progress indicator */}
-        {isDownloading && (
-          <View style={styles.thumbnailOverlay}>
-            <CircularProgressIndicator
-              value={downloadPercent}
-              radius={30}
-              activeStrokeWidth={5}
-              inActiveStrokeWidth={5}
-              activeStrokeColor={Colors.white}
-              inActiveStrokeColor={'rgba(255, 255, 255, 0.3)'}
-              progressValueColor={Colors.white}
-              valueSuffix={'%'}
-              progressValueStyle={{fontWeight: 'bold', fontSize: 14}}
-              progressFormatter={value => {
-                'worklet';
-                return Math.round(value).toString();
-              }}
-              duration={250}
-            />
-          </View>
-        )}
+          {/* Overlay for better visibility of progress indicator */}
+          {isDownloading && (
+            <View style={styles.thumbnailOverlay}>
+              <CircularProgressIndicator
+                value={downloadPercent}
+                radius={30}
+                activeStrokeWidth={5}
+                inActiveStrokeWidth={5}
+                activeStrokeColor={Colors.white}
+                inActiveStrokeColor={'rgba(255, 255, 255, 0.3)'}
+                progressValueColor={Colors.white}
+                valueSuffix={'%'}
+                progressValueStyle={{fontWeight: 'bold', fontSize: 14}}
+                progressFormatter={value => {
+                  'worklet';
+                  return Math.round(value).toString();
+                }}
+                duration={250}
+              />
+            </View>
+          )}
 
-        {/* Play icon for downloaded videos */}
-        {isDownloaded && (
-          <View style={styles.playIconContainer}>
-            <Ionicons name="play-circle" size={60} color={Colors.white} />
-          </View>
-        )}
-      </View>
+          {/* Play icon for downloaded videos */}
+          {isDownloaded && (
+            <View style={styles.playIconContainer}>
+              <Ionicons name="play-circle" size={60} color={Colors.white} />
+            </View>
+          )}
 
-      <View padding-10>
-        <Text text70 numberOfLines={1}>
-          {item.title}
-        </Text>
-        <View row spread marginT-5>
-          <Text text80 grey40>
-            {formatDuration(item.duration)}
-          </Text>
-          <Text text80 grey40>
-            {formatFileSize(item.size)}
-          </Text>
+          {/* Retry button for failed downloads */}
+          {isFailed && onRetry && (
+            <View style={styles.thumbnailOverlay}>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => onRetry(item.id)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh-circle" size={60} color={Colors.white} />
+                <Text style={styles.retryText}>Retry Download</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-});
+
+        <View padding-10>
+          <Text text70 numberOfLines={1}>
+            {item.title}
+          </Text>
+          <View row spread marginT-5>
+            <Text text80 grey40>
+              {formatDuration(item.duration)}
+            </Text>
+            <Text text80 grey40>
+              {formatFileSize(item.size)}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  },
+);
 
 export const Library = observer(() => {
   const {t} = useServices();
@@ -163,9 +188,9 @@ export const Library = observer(() => {
 
   const renderVideoItem = useCallback(
     ({item}: {item: VideoRecord}) => {
-      return <VideoItem item={item} onPlay={handlePlayVideo} />;
+      return <VideoItem item={item} onPlay={handlePlayVideo} onRetry={handleDownloadVideo} />;
     },
-    [handlePlayVideo],
+    [handlePlayVideo, handleDownloadVideo],
   );
 
   // Show loading indicator when initially loading
@@ -289,5 +314,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  retryButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  retryText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 5,
   },
 });
