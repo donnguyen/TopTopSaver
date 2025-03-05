@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "918686595984",
+    "project_id": "toptopsaver",
+    "storage_bucket": "toptopsaver.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:918686595984:android:3473279b5b3fb1efacd115",
+        "android_client_info": {
+          "package_name": "com.hazuu.toksaver_no_watermark_video_downloader_for_tiktok"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBY63xng5uAtbu48mmJe_npzjF_dSQSpg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
