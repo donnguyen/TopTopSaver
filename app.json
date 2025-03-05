@@ -72,8 +72,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-1243734497405516~UPDATE_WITH_NEW_APP_ID",
-          "iosAppId": "ca-app-pub-1243734497405516~UPDATE_WITH_NEW_APP_ID",
+          "androidAppId": "ca-app-pub-1243734497405516~5592056263",
+          "iosAppId": "ca-app-pub-1243734497405516~3994203444",
           "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
           "skAdNetworkItems": [
             "cstr6suwn9.skadnetwork",
@@ -125,7 +125,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "3d225ec7-deab-4dfd-90fb-59462d4a01d3"
       }
     }
   }
