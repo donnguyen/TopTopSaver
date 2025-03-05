@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TopTopSaver - Downloader for TikTok",
+    "name": "TokSaver - No watermark video downloader",
     "slug": "top-top-saver",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,12 +15,10 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hazuu.toptopsaver",
+      "bundleIdentifier": "com.hazuu.toksaver-no-watermark-video-downloader",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -31,7 +29,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.hazuu.toptopsaver",
+      "package": "com.hazuu.toksaver_no_watermark_video_downloader",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
