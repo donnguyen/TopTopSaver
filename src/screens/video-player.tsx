@@ -29,14 +29,12 @@ export const VideoPlayer = observer(() => {
 
   // Initialize the video player with the video URI (using empty string as fallback)
   const player = useVideoPlayer(videoUri || '', player => {
+    player.loop = true;
     if (videoUri && !loading && !error) {
       playerRef.current = player;
       player.play();
     }
   });
-
-  // Get the playing state from the player
-  const {isPlaying} = useEvent(player, 'playingChange', {isPlaying: player.playing});
 
   // Auto-hide overlay after 3 seconds
   useEffect(() => {
