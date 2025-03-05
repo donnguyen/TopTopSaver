@@ -18,7 +18,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hazuu.toksaver-no-watermark-video-downloader",
+      "bundleIdentifier": "com.hazuu.toksaver-no-watermark-video-downloader-for-tiktok",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -29,7 +29,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.hazuu.toksaver_no_watermark_video_downloader",
+      "package": "com.hazuu.toksaver_no_watermark_video_downloader_for_tiktok",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_EXTERNAL_STORAGE",
