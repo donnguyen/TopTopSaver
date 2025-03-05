@@ -1,5 +1,5 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {StyleSheet, Dimensions, TouchableOpacity, Alert} from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {StyleSheet, Dimensions, TouchableOpacity, Alert, Platform} from 'react-native';
 import {View, Text, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
@@ -13,6 +13,13 @@ import {Image} from 'expo-image';
 import {Ionicons} from '@expo/vector-icons';
 import CircularProgressIndicator from 'react-native-circular-progress-indicator';
 import {useActionSheet} from '@expo/react-native-action-sheet';
+import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+
+const adUnitId = __DEV__
+  ? TestIds.ADAPTIVE_BANNER
+  : Platform.OS === 'ios'
+    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
 // Define a blurhash for placeholder images
 const PLACEHOLDER_BLURHASH =
@@ -173,6 +180,11 @@ export const Library = observer(() => {
   const navigation = useNavigation();
   const {videos, isLoading, loadVideos, deleteVideo, startDownload} = useVideosStore();
   const [initialLoading, setInitialLoading] = useState(true);
+  const bannerRef = useRef<BannerAd>(null);
+
+  useForeground(() => {
+    Platform.OS === 'ios' && bannerRef.current?.load();
+  });
 
   // Load videos only once when component mounts
   useEffect(() => {
@@ -281,6 +293,7 @@ export const Library = observer(() => {
           </View>
         )}
       </View>
+      <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
     </Screen>
   );
 });

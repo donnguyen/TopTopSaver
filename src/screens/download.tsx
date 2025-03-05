@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   StyleSheet,
   Keyboard,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Platform,
 } from 'react-native';
 import {View, Text, TextField, Button, Colors, Dialog} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
@@ -16,6 +17,13 @@ import * as Clipboard from 'expo-clipboard';
 import {useVideosDatabase} from '@app/services/db';
 import {APIError} from '@app/services/api/tiktok';
 import {useVideosStore} from '@app/stores/videos.store';
+import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+
+const adUnitId = __DEV__
+  ? TestIds.ADAPTIVE_BANNER
+  : Platform.OS === 'ios'
+    ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
+    : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
 
 // Define TikTok URL patterns
 const TIKTOK_URL_PATTERNS = [
@@ -41,6 +49,11 @@ export const Download = () => {
   const [error, setError] = useState('');
   const [existingVideo, setExistingVideo] = useState<null | {id: string}>(null);
   const [showExistingDialog, setShowExistingDialog] = useState(false);
+  const bannerRef = useRef<BannerAd>(null);
+
+  useForeground(() => {
+    Platform.OS === 'ios' && bannerRef.current?.load();
+  });
 
   const handleDownload = async () => {
     // Reset error state
@@ -280,6 +293,7 @@ export const Download = () => {
             </View>
           </View>
         </Dialog>
+        <BannerAd ref={bannerRef} unitId={adUnitId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
       </Screen>
     </TouchableWithoutFeedback>
   );
