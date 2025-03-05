@@ -23,7 +23,8 @@ export const navio = Navio.build({
       options: props => ({
         title: 'ThreeOne',
         headerShown: false,
-        statusBarHidden: true,
+        statusBarTranslucent: true,
+        statusBarColor: 'transparent',
       }),
     },
   },
