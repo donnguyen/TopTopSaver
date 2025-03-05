@@ -18,7 +18,14 @@ export const navio = Navio.build({
   screens: {
     Download,
     Library,
-    VideoPlayer,
+    VideoPlayer: {
+      component: VideoPlayer,
+      options: props => ({
+        title: 'ThreeOne',
+        headerShown: false,
+        statusBarHidden: true,
+      }),
+    },
   },
   stacks: {
     DownloadStack: ['Download'],

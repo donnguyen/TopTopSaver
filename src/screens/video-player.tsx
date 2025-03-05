@@ -1,28 +1,25 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react';
-import {StyleSheet, ActivityIndicator} from 'react-native';
+import {StyleSheet, ActivityIndicator, TouchableOpacity} from 'react-native';
 import {View, Text, Colors, Button} from 'react-native-ui-lib';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
-import {useServices} from '@app/services';
 import {VideoRecord} from '@app/utils/types/api';
 import {useVideoPlayer, VideoView, VideoPlayer as ExpoVideoPlayer} from 'expo-video';
 import {useEvent} from 'expo';
 import {Ionicons} from '@expo/vector-icons';
 import {useVideosStore} from '@app/stores/videos.store';
 import {observer} from 'mobx-react-lite';
-import {useDownloadManager} from '../services/download';
 
 export const VideoPlayer = observer(() => {
-  const {t} = useServices();
   const navigation = useNavigation();
   const route = useRoute<any>();
   const {videos} = useVideosStore();
-  const downloadManager = useDownloadManager();
   const [video, setVideo] = useState<VideoRecord | null>(null);
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isLocalFile, setIsLocalFile] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
+  const overlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get the video ID from the route params
   const videoId = route.params?.videoId;
@@ -40,6 +37,34 @@ export const VideoPlayer = observer(() => {
 
   // Get the playing state from the player
   const {isPlaying} = useEvent(player, 'playingChange', {isPlaying: player.playing});
+
+  // Auto-hide overlay after 3 seconds
+  useEffect(() => {
+    // Function to start the timer
+    const startOverlayTimer = () => {
+      // Clear any existing timer
+      if (overlayTimerRef.current) {
+        clearTimeout(overlayTimerRef.current);
+      }
+
+      // Set a new timer to hide the overlay after 3 seconds
+      overlayTimerRef.current = setTimeout(() => {
+        setShowOverlay(false);
+      }, 3000);
+    };
+
+    // Start timer when overlay is shown
+    if (showOverlay) {
+      startOverlayTimer();
+    }
+
+    // Clean up timer on unmount
+    return () => {
+      if (overlayTimerRef.current) {
+        clearTimeout(overlayTimerRef.current);
+      }
+    };
+  }, [showOverlay]);
 
   const findVideo = useCallback(
     (id: string) => {
@@ -59,33 +84,9 @@ export const VideoPlayer = observer(() => {
           if (foundVideo.local_uri) {
             // Use the stored local URI
             setVideoUri(foundVideo.local_uri);
-            setIsLocalFile(true);
-          }
-          // If no local URI but status is downloaded, try to get the file path
-          else if (foundVideo.status === 'downloaded') {
-            try {
-              // Get the local file path
-              const filePath = await downloadManager.getVideoFilePath(videoId);
-              const isDownloaded = await downloadManager.isVideoDownloaded(videoId);
-
-              if (isDownloaded) {
-                setVideoUri(filePath);
-                setIsLocalFile(true);
-              } else {
-                // If the file doesn't exist but status is downloaded, use the URL
-                setVideoUri(foundVideo.hdplay);
-                setIsLocalFile(false);
-                console.warn('Video marked as downloaded but file not found, using URL instead');
-              }
-            } catch (err) {
-              console.error('Error getting video file:', err);
-              setVideoUri(foundVideo.hdplay);
-              setIsLocalFile(false);
-            }
           } else {
-            // If not downloaded, use the URL
+            // If no local URI, use the streaming URL
             setVideoUri(foundVideo.hdplay);
-            setIsLocalFile(false);
           }
         } else {
           setError('Video not found');
@@ -98,7 +99,7 @@ export const VideoPlayer = observer(() => {
     };
 
     loadVideo();
-  }, [videoId, findVideo, downloadManager]);
+  }, [videoId, findVideo]);
 
   // Effect to handle player when videoUri changes
   useEffect(() => {
@@ -140,78 +141,38 @@ export const VideoPlayer = observer(() => {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Button
-          iconSource={() => <Ionicons name="arrow-back" size={24} color={Colors.white} />}
-          link
-          onPress={handleBack}
-        />
-        <Text text60 white marginL-10 style={{flex: 1}} numberOfLines={1}>
-          {video.title}
-        </Text>
-      </View>
+      <View style={styles.fullScreenContainer}>
+        <View style={styles.videoContainer}>
+          <TouchableOpacity
+            style={styles.touchableVideo}
+            activeOpacity={1}
+            onPress={() => setShowOverlay(true)}
+          >
+            <VideoView
+              style={styles.video}
+              player={player}
+              allowsFullscreen
+              contentFit="contain"
+              nativeControls
+            />
+          </TouchableOpacity>
 
-      <View style={styles.videoContainer}>
-        <VideoView
-          style={styles.video}
-          player={player}
-          allowsFullscreen
-          contentFit="contain"
-          nativeControls
-        />
-      </View>
+          {/* Back button overlay - always visible */}
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          </TouchableOpacity>
 
-      <View style={styles.infoContainer}>
-        <Text text60 marginB-10>
-          {video.title}
-        </Text>
-
-        <View row marginB-10>
-          <View style={styles.authorContainer}>
-            <Text text80 grey40>
-              Author: {video.author_nickname} (@{video.author_unique_id})
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.sourceInfo}>
-          <Text text80 grey40>
-            Source: {isLocalFile ? 'Local File' : 'Streaming'}
-          </Text>
-          {isLocalFile ? (
-            <View row centerV marginT-5>
-              <Ionicons name="save" size={16} color={Colors.green30} style={{marginRight: 5}} />
-              <Text text90 color={Colors.green30}>
-                Playing from device storage (no data usage)
+          {/* Title overlay at bottom left */}
+          {showOverlay && (
+            <View style={styles.titleOverlay}>
+              <Text text80 white numberOfLines={2}>
+                {video.title}
               </Text>
-            </View>
-          ) : (
-            <View row centerV marginT-5>
-              <Ionicons
-                name="cloud-download"
-                size={16}
-                color={Colors.blue30}
-                style={{marginRight: 5}}
-              />
-              <Text text90 color={Colors.blue30}>
-                Streaming from server (uses data)
+              <Text text90 white marginT-5>
+                {video.author_nickname} (@{video.author_unique_id})
               </Text>
             </View>
           )}
-        </View>
-
-        <View style={styles.controlsContainer}>
-          <Button
-            label={isPlaying ? 'Pause' : 'Play'}
-            backgroundColor={isPlaying ? Colors.orange30 : Colors.green30}
-            onPress={() => {
-              if (isPlaying) {
-                player.pause();
-              } else {
-                player.play();
-              }
-            }}
-          />
         </View>
       </View>
     </Screen>
@@ -225,33 +186,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: Colors.primary,
+  fullScreenContainer: {
+    flex: 1,
+    backgroundColor: Colors.black,
   },
   videoContainer: {
-    width: '100%',
-    aspectRatio: 9 / 16, // TikTok videos are typically in portrait mode
+    flex: 1,
+    position: 'relative',
     backgroundColor: Colors.black,
+  },
+  touchableVideo: {
+    flex: 1,
   },
   video: {
     flex: 1,
   },
-  infoContainer: {
-    padding: 15,
-  },
-  authorContainer: {
-    flex: 1,
-  },
-  sourceInfo: {
-    marginTop: 5,
-    marginBottom: 10,
-  },
-  controlsContainer: {
-    marginTop: 10,
-    flexDirection: 'row',
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  titleOverlay: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 8,
+    zIndex: 10,
   },
 });
