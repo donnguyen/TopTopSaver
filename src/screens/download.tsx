@@ -1,5 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, Keyboard, TouchableWithoutFeedback, TouchableOpacity} from 'react-native';
+import {
+  StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+} from 'react-native';
 import {View, Text, TextField, Button, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
@@ -135,8 +142,12 @@ export const Download = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <Screen>
+    <Screen>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.container}>
           <Text text70 marginB-15 style={styles.instructionText}>
             Paste a TikTok video URL below
@@ -173,22 +184,62 @@ export const Download = () => {
             without watermark
           </Text>
 
+          {/* User Guide */}
+          <View style={styles.guideContainer}>
+            <Text text80 style={styles.guideTitle}>
+              How to use:
+            </Text>
+            <View style={styles.guideStep}>
+              <Text text80 style={styles.guideNumber}>
+                1.
+              </Text>
+              <Text text80 style={styles.guideText}>
+                While watching a TikTok video, tap the Share button
+              </Text>
+            </View>
+            <View style={styles.guideStep}>
+              <Text text80 style={styles.guideNumber}>
+                2.
+              </Text>
+              <Text text80 style={styles.guideText}>
+                Tap "Copy link"
+              </Text>
+            </View>
+            <View style={styles.guideStep}>
+              <Text text80 style={styles.guideNumber}>
+                3.
+              </Text>
+              <Text text80 style={styles.guideText}>
+                Open this app and tap the Paste button in the input field above
+              </Text>
+            </View>
+            <Image
+              source={require('../../assets/images/copy-link.jpg')}
+              style={styles.guideImage}
+              resizeMode="contain"
+            />
+          </View>
+
           <Text text80 marginT-30 style={styles.disclaimer}>
             This app allows you to download TikTok videos without watermarks for personal use only.
             Please respect copyright and intellectual property rights.
           </Text>
         </View>
-      </Screen>
-    </TouchableWithoutFeedback>
+      </ScrollView>
+    </Screen>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   instructionText: {
     fontWeight: '500',
@@ -239,5 +290,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: Colors.grey40,
     maxWidth: '90%',
+  },
+  guideContainer: {
+    marginTop: 30,
+    width: '100%',
+    alignItems: 'flex-start',
+    padding: 16,
+    backgroundColor: Colors.grey80,
+    borderRadius: 12,
+  },
+  guideTitle: {
+    fontWeight: '600',
+    marginBottom: 12,
+    color: Colors.grey10,
+  },
+  guideStep: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    alignItems: 'flex-start',
+  },
+  guideNumber: {
+    fontWeight: '600',
+    marginRight: 8,
+    color: Colors.primary,
+    width: 20,
+  },
+  guideText: {
+    color: Colors.grey20,
+    flex: 1,
+  },
+  guideImage: {
+    width: '100%',
+    height: 280,
+    marginTop: 12,
+    borderRadius: 8,
   },
 });
