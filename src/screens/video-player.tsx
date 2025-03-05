@@ -141,19 +141,13 @@ export const VideoPlayer = observer(() => {
     <Screen>
       <View style={styles.fullScreenContainer}>
         <View style={styles.videoContainer}>
-          <TouchableOpacity
-            style={styles.touchableVideo}
-            activeOpacity={1}
-            onPress={() => setShowOverlay(true)}
-          >
-            <VideoView
-              style={styles.video}
-              player={player}
-              allowsFullscreen
-              contentFit="contain"
-              nativeControls
-            />
-          </TouchableOpacity>
+          <VideoView
+            style={styles.video}
+            player={player}
+            allowsFullscreen
+            contentFit="contain"
+            nativeControls
+          />
 
           {/* Back button overlay - always visible */}
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -201,7 +195,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 20,
+    top: 50,
     left: 20,
     width: 40,
     height: 40,

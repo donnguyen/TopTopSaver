@@ -110,23 +110,27 @@ export const Download = () => {
   const renderTrailingAccessory = () => {
     if (tiktokUrl) {
       return (
-        <TouchableWithoutFeedback onPress={() => setTiktokUrl('')}>
-          <Ionicons
-            name="close-circle"
-            size={20}
-            color={Colors.grey40}
-            style={styles.accessoryIcon}
-          />
-        </TouchableWithoutFeedback>
+        <View style={styles.pasteButtonWrapper}>
+          <TouchableWithoutFeedback onPress={() => setTiktokUrl('')}>
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color={Colors.grey40}
+              style={styles.accessoryIcon}
+            />
+          </TouchableWithoutFeedback>
+        </View>
       );
     }
 
     return (
-      <TouchableOpacity onPress={handlePaste} style={styles.pasteButton}>
-        <Text text80 color={Colors.primary}>
-          Paste
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.pasteButtonWrapper}>
+        <TouchableOpacity onPress={handlePaste} style={styles.pasteButton}>
+          <Text text80 color={Colors.primary}>
+            Paste
+          </Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -149,6 +153,8 @@ export const Download = () => {
               keyboardType="url"
               placeholderTextColor={Colors.grey40}
               trailingAccessory={renderTrailingAccessory()}
+              multiline={false}
+              maxLength={200}
             />
           </View>
 
@@ -201,12 +207,19 @@ const styles = StyleSheet.create({
   accessoryIcon: {
     padding: 4,
   },
+  pasteButtonWrapper: {
+    position: 'absolute',
+    right: 8,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   pasteButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 4,
     backgroundColor: Colors.grey70,
-    marginRight: 4,
   },
   button: {
     width: '100%',
