@@ -2480,6 +2480,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@expo/react-native-action-sheet@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "@expo/react-native-action-sheet@npm:4.1.1"
+  dependencies:
+    "@types/hoist-non-react-statics": "npm:^3.3.1"
+    hoist-non-react-statics: "npm:^3.3.0"
+  peerDependencies:
+    react: ">=18.0.0"
+  checksum: 10c0/65a3ec63509c64aefaee4cc128f8b2e897a0a3f04702a0f22ba82bbd9c3fa1873ecc2f39ade44e089d6a209385b59c4af10389a097739c0eeea7c091bd95b4a2
+  languageName: node
+  linkType: hard
+
 "@expo/rudder-sdk-node@npm:^1.1.1":
   version: 1.1.1
   resolution: "@expo/rudder-sdk-node@npm:1.1.1"
@@ -4795,6 +4807,16 @@ __metadata:
   version: 2.0.38
   resolution: "@types/hammerjs@npm:2.0.38"
   checksum: 10c0/6a474cc454f48af83d1401ff2927a960e816d726100162bb6f5743df925f9715cb60558aa77fd10d314e0eb011271f11410b24e82c3402a3a9deec64e0c32f19
+  languageName: node
+  linkType: hard
+
+"@types/hoist-non-react-statics@npm:^3.3.1":
+  version: 3.3.6
+  resolution: "@types/hoist-non-react-statics@npm:3.3.6"
+  dependencies:
+    "@types/react": "npm:*"
+    hoist-non-react-statics: "npm:^3.3.0"
+  checksum: 10c0/149a4c217d81f21f8a1e152160a59d5b99b6a9aa6d354385d5f5bc02760cbf1e170a8442ba92eb653befff44b0c5bc2234bb77ce33e0d11a65f779e8bab5c321
   languageName: node
   linkType: hard
 
@@ -9365,6 +9387,7 @@ __metadata:
     "@babel/preset-typescript": "npm:^7.24.1"
     "@babel/types": "npm:^7.24.0"
     "@expo/config-plugins": "npm:~9.0.0"
+    "@expo/react-native-action-sheet": "npm:^4.1.1"
     "@expo/webpack-config": "npm:~19.0.1"
     "@kanzitelli/if-component": "npm:^0.3.0"
     "@react-native-async-storage/async-storage": "npm:1.23.1"

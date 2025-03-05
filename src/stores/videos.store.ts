@@ -1,9 +1,10 @@
-import {makeAutoObservable, runInAction} from 'mobx';
 import {VideoRecord, TikTokVideoData} from '@app/utils/types/api';
-import {useVideosDatabase} from '@app/services/db';
-import {useStores} from './index';
+import {makeAutoObservable, runInAction} from 'mobx';
+import {useVideosDatabase} from '@app/services/db/videos';
+import {DownloadCallbacks, downloadManager, useDownloadManager} from '@app/services/download';
 import {useCallback, useEffect} from 'react';
-import {downloadManager, useDownloadManager, DownloadCallbacks} from '../services/download';
+import * as FileSystem from 'expo-file-system';
+import {useStores} from './index';
 
 const LOADING_TIMEOUT = 10000; // 10 seconds
 
@@ -102,7 +103,27 @@ export class VideosStore {
 
   deleteVideoFromDb = async (id: string, videosDb: ReturnType<typeof useVideosDatabase>) => {
     try {
+      // First, get the video to check if it has a local file
+      const video = this.videos.find(v => v.id === id);
+
+      // Delete from database
       await videosDb.deleteVideo(id);
+
+      // Delete local file if it exists
+      if (video && video.local_uri) {
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(video.local_uri);
+          if (fileInfo.exists) {
+            await FileSystem.deleteAsync(video.local_uri);
+            console.log(`Deleted local file: ${video.local_uri}`);
+          }
+        } catch (fileError) {
+          console.error('Failed to delete local file:', fileError);
+          // Continue with deletion from store even if file deletion fails
+        }
+      }
+
+      // Update the store
       runInAction(() => {
         this.deleteVideo(id);
       });

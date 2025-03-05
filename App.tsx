@@ -19,6 +19,7 @@ import {hydrateStores} from '@app/stores';
 import {initServices} from '@app/services';
 import {AppProvider} from '@app/utils/providers';
 import {useAppearance} from '@app/utils/hooks';
+import {ActionSheetProvider} from '@expo/react-native-action-sheet';
 
 LogBox.ignoreLogs([
   'Require',
@@ -61,19 +62,21 @@ export default (): JSX.Element => {
   if (!ready) return NotReady;
   return (
     <GestureHandlerRootView style={{flex: 1}}>
-      <AppProvider>
-        <StatusBar style={getStatusBarStyle()} backgroundColor={getStatusBarBGColor()} />
-        <NavioApp
-          navigationContainerProps={{
-            theme: getNavigationTheme(),
-            linking: {
-              prefixes: [Linking.createURL('/')],
-            },
-          }}
-          // Use only our TikTok downloader tabs
-          root="tabs.AppTabs"
-        />
-      </AppProvider>
+      <ActionSheetProvider>
+        <AppProvider>
+          <StatusBar style={getStatusBarStyle()} backgroundColor={getStatusBarBGColor()} />
+          <NavioApp
+            navigationContainerProps={{
+              theme: getNavigationTheme(),
+              linking: {
+                prefixes: [Linking.createURL('/')],
+              },
+            }}
+            // Use only our TikTok downloader tabs
+            root="tabs.AppTabs"
+          />
+        </AppProvider>
+      </ActionSheetProvider>
     </GestureHandlerRootView>
   );
 };

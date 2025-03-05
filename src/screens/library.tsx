@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
+import {StyleSheet, Dimensions, TouchableOpacity, Alert} from 'react-native';
 import {View, Text, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
@@ -12,6 +12,7 @@ import {observer} from 'mobx-react-lite';
 import {Image} from 'expo-image';
 import {Ionicons} from '@expo/vector-icons';
 import CircularProgressIndicator from 'react-native-circular-progress-indicator';
+import {useActionSheet} from '@expo/react-native-action-sheet';
 
 // Define a blurhash for placeholder images
 const PLACEHOLDER_BLURHASH =
@@ -23,11 +24,15 @@ const VideoItem = observer(
     item,
     onPlay,
     onRetry,
+    onDelete,
   }: {
     item: VideoRecord;
     onPlay: (id: string) => void;
     onRetry?: (id: string) => void;
+    onDelete: (id: string) => void;
   }) => {
+    const {showActionSheetWithOptions} = useActionSheet();
+
     // Create the full thumbnail URL by prefixing with TikWm host
     const thumbnailUrl = item.cover.startsWith('http')
       ? item.cover
@@ -39,6 +44,42 @@ const VideoItem = observer(
 
     // Use the download_percentage from the store
     const downloadPercent = item.download_percentage ?? 0;
+
+    const handleOptionsPress = () => {
+      const options = ['Delete', 'Cancel'];
+      const destructiveButtonIndex = 0;
+      const cancelButtonIndex = 1;
+
+      showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+          destructiveButtonIndex,
+          title: 'Video Options',
+        },
+        (selectedIndex?: number) => {
+          if (selectedIndex === destructiveButtonIndex) {
+            // Show confirmation alert before deleting
+            Alert.alert(
+              'Confirm Deletion',
+              'Are you sure you want to delete this video? This action cannot be undone.',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: () => onDelete(item.id),
+                },
+              ],
+              {cancelable: true},
+            );
+          }
+        },
+      );
+    };
 
     return (
       <TouchableOpacity
@@ -55,6 +96,15 @@ const VideoItem = observer(
             transition={300}
             cachePolicy="memory-disk"
           />
+
+          {/* Menu button in top right corner */}
+          <TouchableOpacity
+            style={styles.menuButtonContainer}
+            onPress={handleOptionsPress}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+          >
+            <Ionicons name="ellipsis-horizontal" size={18} color={Colors.white} />
+          </TouchableOpacity>
 
           {/* Overlay for better visibility of progress indicator */}
           {isDownloading && (
@@ -186,11 +236,16 @@ export const Library = observer(() => {
     [navigation],
   );
 
-  const renderVideoItem = useCallback(
-    ({item}: {item: VideoRecord}) => {
-      return <VideoItem item={item} onPlay={handlePlayVideo} onRetry={handleDownloadVideo} />;
-    },
-    [handlePlayVideo, handleDownloadVideo],
+  const renderItem = useCallback(
+    ({item}: {item: VideoRecord}) => (
+      <VideoItem
+        item={item}
+        onPlay={handlePlayVideo}
+        onRetry={item.status === 'failed' ? handleDownloadVideo : undefined}
+        onDelete={handleDeleteVideo}
+      />
+    ),
+    [handlePlayVideo, handleDownloadVideo, handleDeleteVideo],
   );
 
   // Show loading indicator when initially loading
@@ -215,7 +270,7 @@ export const Library = observer(() => {
           <View style={styles.listContainer}>
             <FlashList
               data={videos}
-              renderItem={renderVideoItem}
+              renderItem={renderItem}
               keyExtractor={item => item.id}
               contentContainerStyle={styles.listContent}
               estimatedItemSize={250}
@@ -324,5 +379,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginTop: 5,
+  },
+  menuButtonContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
 });
