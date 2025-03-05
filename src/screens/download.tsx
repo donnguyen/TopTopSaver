@@ -163,7 +163,7 @@ export const Download = () => {
             disabledBackgroundColor={Colors.grey50}
             marginT-20
           />
-          <Text text80 marginT-5 style={styles.subtitleText}>
+          <Text text90 marginT-5 style={styles.subtitleText}>
             without watermark
           </Text>
 
