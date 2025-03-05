@@ -7,7 +7,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import {View, Text, TextField, Button, Colors} from 'react-native-ui-lib';
+import {View, Text, TextField, Button, Colors, Dialog} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
 import {useServices} from '@app/services';
@@ -35,13 +35,17 @@ export const Download = () => {
   const {t, api} = useServices();
   const navigation = useNavigation();
   const {saveVideo} = useVideosStore();
+  const videosDb = useVideosDatabase();
   const [tiktokUrl, setTiktokUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [existingVideo, setExistingVideo] = useState<null | {id: string}>(null);
+  const [showExistingDialog, setShowExistingDialog] = useState(false);
 
   const handleDownload = async () => {
     // Reset error state
     setError('');
+    setExistingVideo(null);
 
     // Basic URL validation
     if (!tiktokUrl) {
@@ -69,6 +73,16 @@ export const Download = () => {
         return;
       }
 
+      // Check if the video already exists in the database
+      const existingVideo = await videosDb.getVideoById(response.data.id);
+
+      if (existingVideo) {
+        setExistingVideo(existingVideo);
+        setShowExistingDialog(true);
+        setIsLoading(false);
+        return;
+      }
+
       // Save the video metadata to the database and update the store
       // Wait for the saveVideo function to complete, which persists to the database
       await saveVideo(response.data);
@@ -91,6 +105,13 @@ export const Download = () => {
       }
       setIsLoading(false);
     }
+  };
+
+  const handleViewExistingVideo = () => {
+    setShowExistingDialog(false);
+    setTiktokUrl('');
+    // @ts-ignore - Using string navigation with Navio
+    navigation.navigate('LibraryTab');
   };
 
   const handlePaste = async () => {
@@ -142,91 +163,125 @@ export const Download = () => {
   };
 
   return (
-    <Screen>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.container}>
-          <Text text70 marginB-15 style={styles.instructionText}>
-            Paste a TikTok video URL below
-          </Text>
-
-          <View style={styles.inputWrapper}>
-            <TextField
-              placeholder="https://www.tiktok.com/@username/video/1234567890"
-              value={tiktokUrl}
-              onChangeText={setTiktokUrl}
-              fieldStyle={styles.fieldStyle}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              placeholderTextColor={Colors.grey40}
-              trailingAccessory={renderTrailingAccessory()}
-              multiline={false}
-              maxLength={200}
-            />
-          </View>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <Button
-            label={isLoading ? 'Downloading...' : 'Download Video'}
-            onPress={handleDownload}
-            disabled={isLoading || !tiktokUrl}
-            style={styles.button}
-            backgroundColor={Colors.primary}
-            disabledBackgroundColor={Colors.grey50}
-            marginT-20
-          />
-          <Text text90 marginT-5 style={styles.subtitleText}>
-            without watermark
-          </Text>
-
-          {/* User Guide */}
-          <View style={styles.guideContainer}>
-            <Text text80 style={styles.guideTitle}>
-              How to use:
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <Screen>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Text text70 marginB-15 style={styles.instructionText}>
+              Paste a TikTok video URL below
             </Text>
-            <View style={styles.guideStep}>
-              <Text text80 style={styles.guideNumber}>
-                1.
-              </Text>
-              <Text text80 style={styles.guideText}>
-                While watching a TikTok video, tap the Share button
-              </Text>
-            </View>
-            <View style={styles.guideStep}>
-              <Text text80 style={styles.guideNumber}>
-                2.
-              </Text>
-              <Text text80 style={styles.guideText}>
-                Tap "Copy link"
-              </Text>
-            </View>
-            <View style={styles.guideStep}>
-              <Text text80 style={styles.guideNumber}>
-                3.
-              </Text>
-              <Text text80 style={styles.guideText}>
-                Open this app and tap the Paste button in the input field above
-              </Text>
-            </View>
-            <Image
-              source={require('../../assets/images/copy-link.jpg')}
-              style={styles.guideImage}
-              resizeMode="contain"
-            />
-          </View>
 
-          <Text text80 marginT-30 style={styles.disclaimer}>
-            This app allows you to download TikTok videos without watermarks for personal use only.
-            Please respect copyright and intellectual property rights.
-          </Text>
-        </View>
-      </ScrollView>
-    </Screen>
+            <View style={styles.inputWrapper}>
+              <TextField
+                placeholder="https://www.tiktok.com/@username/video/1234567890"
+                value={tiktokUrl}
+                onChangeText={setTiktokUrl}
+                fieldStyle={styles.fieldStyle}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                placeholderTextColor={Colors.grey40}
+                trailingAccessory={renderTrailingAccessory()}
+                multiline={false}
+                maxLength={200}
+              />
+            </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <Button
+              label={isLoading ? 'Downloading...' : 'Download Video'}
+              onPress={handleDownload}
+              disabled={isLoading || !tiktokUrl}
+              style={styles.button}
+              backgroundColor={Colors.primary}
+              disabledBackgroundColor={Colors.grey50}
+              marginT-20
+            />
+            <Text text90 marginT-5 style={styles.subtitleText}>
+              without watermark
+            </Text>
+
+            {/* User Guide */}
+            <View style={styles.guideContainer}>
+              <Text text80 style={styles.guideTitle}>
+                How to use:
+              </Text>
+              <View style={styles.guideStep}>
+                <Text text80 style={styles.guideNumber}>
+                  1.
+                </Text>
+                <Text text80 style={styles.guideText}>
+                  While watching a TikTok video, tap the Share button
+                </Text>
+              </View>
+              <View style={styles.guideStep}>
+                <Text text80 style={styles.guideNumber}>
+                  2.
+                </Text>
+                <Text text80 style={styles.guideText}>
+                  Tap "Copy link"
+                </Text>
+              </View>
+              <View style={styles.guideStep}>
+                <Text text80 style={styles.guideNumber}>
+                  3.
+                </Text>
+                <Text text80 style={styles.guideText}>
+                  Open this app and tap the Paste button in the input field above
+                </Text>
+              </View>
+              <Image
+                source={require('../../assets/images/copy-link.jpg')}
+                style={styles.guideImage}
+                resizeMode="contain"
+              />
+            </View>
+
+            <Text text80 marginT-30 style={styles.disclaimer}>
+              This app allows you to download TikTok videos without watermarks for personal use
+              only. Please respect copyright and intellectual property rights.
+            </Text>
+          </View>
+        </ScrollView>
+
+        {/* Dialog for existing video */}
+        <Dialog
+          visible={showExistingDialog}
+          onDismiss={() => setShowExistingDialog(false)}
+          containerStyle={styles.dialogContainer}
+        >
+          <View padding-20>
+            <Text text70 marginB-10 style={styles.dialogTitle}>
+              Video Already in Library
+            </Text>
+            <Text text80 marginB-20>
+              This video is already in your library. Would you like to view it?
+            </Text>
+            <View row spread>
+              <Button
+                label="Cancel"
+                link
+                color={Colors.grey30}
+                onPress={() => {
+                  setShowExistingDialog(false);
+                  setTiktokUrl('');
+                }}
+              />
+              <Button
+                label="View in Library"
+                backgroundColor={Colors.primary}
+                onPress={handleViewExistingVideo}
+              />
+            </View>
+          </View>
+        </Dialog>
+      </Screen>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -324,5 +379,14 @@ const styles = StyleSheet.create({
     height: 280,
     marginTop: 12,
     borderRadius: 8,
+  },
+  dialogContainer: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    width: '85%',
+  },
+  dialogTitle: {
+    fontWeight: '600',
+    color: Colors.grey10,
   },
 });
