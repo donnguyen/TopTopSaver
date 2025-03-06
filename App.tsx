@@ -20,6 +20,11 @@ import {initServices} from '@app/services';
 import {AppProvider} from '@app/utils/providers';
 import {useAppearance} from '@app/utils/hooks';
 import {ActionSheetProvider} from '@expo/react-native-action-sheet';
+import {
+  getTrackingPermissionsAsync,
+  PermissionStatus,
+  requestTrackingPermissionsAsync,
+} from 'expo-tracking-transparency';
 
 LogBox.ignoreLogs([
   'Require',
@@ -39,12 +44,6 @@ export default (): JSX.Element => {
     configureDesignSystem();
     await initServices();
 
-    mobileAds()
-      .initialize()
-      .then(adapterStatuses => {
-        console.log('adapterStatuses', adapterStatuses);
-      });
-
     setReady(true);
     await SplashScreen.hideAsync();
   }, []);
@@ -52,6 +51,21 @@ export default (): JSX.Element => {
   useEffect(() => {
     onLaunch();
   }, [onLaunch]);
+
+  useEffect(() => {
+    (async () => {
+      const {status} = await getTrackingPermissionsAsync();
+      if (status === PermissionStatus.UNDETERMINED) {
+        await requestTrackingPermissionsAsync();
+      }
+
+      mobileAds()
+        .initialize()
+        .then(adapterStatuses => {
+          console.log('adapterStatuses', adapterStatuses);
+        });
+    })();
+  }, []);
 
   const NotReady = useMemo(() => {
     // [Tip]

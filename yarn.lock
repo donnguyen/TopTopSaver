@@ -9408,6 +9408,7 @@ __metadata:
     expo-splash-screen: "npm:~0.29.22"
     expo-sqlite: "npm:~15.1.2"
     expo-status-bar: "npm:~2.0.1"
+    expo-tracking-transparency: "npm:~5.1.1"
     expo-updates: "npm:~0.26.18"
     expo-video: "npm:~2.0.5"
     formik: "npm:^2.2.9"
@@ -9452,6 +9453,16 @@ __metadata:
   version: 4.0.0
   resolution: "expo-structured-headers@npm:4.0.0"
   checksum: 10c0/257207b7bf84ac94aca209e0830186223a8e2e9e335638559e09153d38d0ee999fffbaf352d272f99ba258e051b892aa48075a0910a0c9566d2ce738999fc93b
+  languageName: node
+  linkType: hard
+
+"expo-tracking-transparency@npm:~5.1.1":
+  version: 5.1.1
+  resolution: "expo-tracking-transparency@npm:5.1.1"
+  peerDependencies:
+    expo: "*"
+    react-native: "*"
+  checksum: 10c0/c0fca15ddf87767cdefa66cbcc5e7d84ced9efb3d207fd9987f4d917c0c880d1ce564bfb592d11c65837aa997faa1391f10fc6513d43ca15f800f60c20db12f3
   languageName: node
   linkType: hard
 
