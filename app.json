@@ -59,6 +59,9 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "extraProguardRules": "-keep class com.google.android.gms.internal.consent_sdk.** { *; }"
           }
         }
       ],
@@ -68,6 +71,7 @@
           "androidAppId": "ca-app-pub-1243734497405516~5592056263",
           "iosAppId": "ca-app-pub-1243734497405516~3994203444",
           "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+          "delayAppMeasurementInit": true,
           "skAdNetworkItems": [
             "cstr6suwn9.skadnetwork",
             "4fzdc2evr5.skadnetwork",
