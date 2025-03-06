@@ -1,40 +1,95 @@
-Title: Easy Passport Photo with AI
+1. App Title (30 Characters Max):
 
-5. App Store Feature Bullets (App Store - Concise, highlight key benefits):
+TokSaver - No WM DL (20 chars) - "WM" is a common abbreviation for Watermark
 
-Instant Passport & ID Photos with AI.
+No Watermark Tok DL (21 chars) - Clear and concise.
 
-Super Simple: No Editing Needed!
+Tok DL - No Watermark (21 chars) - Similar to above.
 
-100% Free: No Hidden Costs.
+TokSave: No WM DL (17 chars) - Short, uses a more branded name
 
-Supports All Countries & Document Types.
+TokSaver: No Watermark (20 chars)
 
-6. Promotional Text (App Store - Short, attention-grabbing):
+I recommend "TokSaver: No Watermark" or "TokSave: No WM DL" as they are clear, include your brand name, and highlight the core functionality.
 
-Perfect Passport Photos in Seconds! AI-Powered & Free.
+2. Short Description (Google Play - 80 Characters):
 
-Easiest Way to Get Compliant ID Photos.
+Download TikToks without watermarks! Save & enjoy videos offline. Free!
 
-Free Passport Photo Maker - No Editing Needed!
+TokSaver: No watermark TikTok downloader. Clean UI & fast downloads.
 
-AI Does the Work - You Get the Perfect Photo.
+Save TikTok videos without watermarks. Easy, fast, and free!
 
+Download TikToks watermark-free & build your video library!
 
-Description:
-Need a passport photo, visa photo, or ID photo, fast? Easy AI Passport Photo makes it incredibly simple to create compliant photos in seconds! It is a great passport photo maker!
+I recommend "Download TikToks without watermarks! Save & enjoy videos offline. Free!" This is benefit-driven and includes the important "free" keyword.
 
-Our intelligent AI technology automatically adjusts your photo to meet official requirements for all countries, so you don't need to worry about complicated editing. Just take or upload a photo, and let our AI do the rest! Forget the traditional photo booth, get professional passport size photo from your home!
+3. Long Description (Google Play & App Store - ~4000 characters, but front-load):
 
-Key Features:
+TokSaver: The easiest way to download TikTok videos without watermarks and build your personal video collection!
 
-*   Super Simple: Our clean and intuitive interface makes creating passport photos a breeze.
-*   Lightning Fast: Get your compliant photo in seconds.
-*   No Editing Needed: The AI automatically handles background removal, resizing, and more. You don't need any photo editor skill!
-*   Completely Free: Enjoy all the features without any hidden costs or subscriptions. This is a completely free passport photo solution!
-*   Supports All Major Document Types: Passport, Visa, ID, and more, for almost every country in the world. Get your passport photo for USA, passport photo for UK ready in seconds!
-*   High-Quality Output: Download a high-resolution digital photo ready for printing or online submission.
+Tired of those annoying TikTok watermarks covering your favorite videos? TokSaver lets you download any public TikTok video without the watermark, so you can enjoy them offline, share them with friends, or use them in your own creative projects.
 
-Why Choose Easy AI Passport Photo?
+**Key Features:**
 
-Tired of complicated passport photo apps that require hours of editing? Easy AI Passport Photo is designed for speed and simplicity. Our AI technology handles the technical details, so you can get a perfect passport photo in seconds, completely free! Download Easy AI Passport Photo today and experience the easiest way to create compliant passport, visa, and ID photos. Now you can create ID photo online without going to a studio.
+*   **No Watermark Downloads:** Download TikTok videos without any watermarks or logos.
+*   **Simple & Fast:** Just copy the TikTok link and paste it into TokSaver – the download starts automatically!
+*   **Clean & Intuitive UI:** Enjoy a user-friendly interface that makes downloading videos a breeze.
+*   **Built-in Library:** Organize and manage your downloaded TikTok videos in TokSaver's built-in library.
+*   **No Login Required:** Download videos without creating an account or sharing your personal information.
+*   **Completely Free:** TokSaver is 100% free to use.
+
+**Why Choose TokSaver?**
+
+TokSaver is the ultimate TikTok downloader for anyone who wants to save and enjoy TikTok videos without distractions. Our simple interface, fast downloads, and no-watermark guarantee make us the best choice for TikTok fans. Download TokSaver today and start building your watermark-free TikTok collection!
+
+**Important:**
+
+*   TokSaver is not affiliated with or endorsed by TikTok.
+*   Please respect TikTok's terms of service and content creators' copyrights. Only download videos that you have permission to use.
+
+[Optional: Add a call to action, e.g., "Download TokSaver now and start saving your favorite TikToks!"]
+Use code with caution.
+4. Keywords:
+
+Primary: TikTok downloader, TikTok video downloader, TikTok downloader no watermark, TikTok video downloader no watermark, TikTok save
+
+Secondary: TikTok video saver, TikTok download, TikTok no watermark, download TikTok, save TikTok, TikTok offline, video downloader, video saver, TikTok library
+
+Long Tail: TikTok downloader without watermark, download TikTok videos without watermark, save TikTok videos without watermark, TikTok video download no watermark, free TikTok downloader, TikTok downloader app
+
+5. App Store Feature Bullets (App Store):
+
+Download TikToks without Watermarks!
+
+Save Videos Fast & Easily.
+
+No Login Required!
+
+Built-in Video Library.
+
+100% Free to Use.
+
+6. Promotional Text (App Store):
+
+Download TikToks Watermark-Free!
+
+Save Your Favorite TikToks Offline.
+
+The Easiest TikTok Downloader!
+
+No Watermarks, No Hassle, Just TikToks!
+
+Key Improvements & Considerations:
+
+Legal/Ethical Disclaimer: I've included a clear disclaimer in the long description. This is crucial for an app like this.
+
+Benefit-Driven: The descriptions focus on the benefits to the user (no watermarks, easy downloads, offline viewing).
+
+Keyword Integration: I've woven the keywords naturally into the descriptions.
+
+Clear Call to Action: Encourage users to download the app.
+
+Screenshots: Make sure your screenshots clearly show the app's functionality and ease of use. Highlight the no-watermark feature and the library.
+
+Remember to monitor your app store performance and A/B test different elements to optimize your listing over time! Good luck!
