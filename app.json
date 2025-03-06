@@ -45,13 +45,6 @@
       "expo-localization",
       "expo-sqlite",
       [
-        "expo-image-picker",
-        {
-          "photosPermission": "The app needs access to your photos to let you select and upload photos for passport and ID document processing.",
-          "cameraPermission": "The app needs access to your photos to let you select and upload photos for passport and ID document processing."
-        }
-      ],
-      [
         "expo-media-library",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
