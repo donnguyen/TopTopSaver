@@ -54,10 +54,12 @@ export const Download = () => {
 
   useEffect(() => {
     (async () => {
-      const {status} = await requestTrackingPermissionsAsync();
-      if (status === 'granted') {
-        console.log('Yay! I have user permission to track data');
-      }
+      setTimeout(async () => {
+        const {granted} = await requestTrackingPermissionsAsync();
+        if (granted) {
+          console.log('Yay! I have user permission to track data');
+        }
+      }, 500);
     })();
   }, []);
 
