@@ -20,11 +20,6 @@ import {initServices} from '@app/services';
 import {AppProvider} from '@app/utils/providers';
 import {useAppearance} from '@app/utils/hooks';
 import {ActionSheetProvider} from '@expo/react-native-action-sheet';
-import {
-  getTrackingPermissionsAsync,
-  PermissionStatus,
-  requestTrackingPermissionsAsync,
-} from 'expo-tracking-transparency';
 
 LogBox.ignoreLogs([
   'Require',
@@ -54,11 +49,6 @@ export default (): JSX.Element => {
 
   useEffect(() => {
     (async () => {
-      const {status} = await getTrackingPermissionsAsync();
-      if (status === PermissionStatus.UNDETERMINED) {
-        await requestTrackingPermissionsAsync();
-      }
-
       mobileAds()
         .initialize()
         .then(adapterStatuses => {

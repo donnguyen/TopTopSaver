@@ -17,6 +17,7 @@ import * as Clipboard from 'expo-clipboard';
 import {useVideosDatabase} from '@app/services/db';
 import {APIError} from '@app/services/api/tiktok';
 import {useVideosStore} from '@app/stores/videos.store';
+import {requestTrackingPermissionsAsync} from 'expo-tracking-transparency';
 import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
 
 const adUnitId = __DEV__
@@ -50,6 +51,15 @@ export const Download = () => {
   const [existingVideo, setExistingVideo] = useState<null | {id: string}>(null);
   const [showExistingDialog, setShowExistingDialog] = useState(false);
   const bannerRef = useRef<BannerAd>(null);
+
+  useEffect(() => {
+    (async () => {
+      const {status} = await requestTrackingPermissionsAsync();
+      if (status === 'granted') {
+        console.log('Yay! I have user permission to track data');
+      }
+    })();
+  }, []);
 
   useForeground(() => {
     Platform.OS === 'ios' && bannerRef.current?.load();
