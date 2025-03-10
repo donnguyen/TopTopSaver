@@ -20,6 +20,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.hazuu.toksaver-no-watermark-video-downloader-for-tiktok",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
+      "icon": "./assets/icon-ios.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
