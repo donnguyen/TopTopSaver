@@ -225,9 +225,9 @@ export const Download = () => {
               disabledBackgroundColor={Colors.grey50}
               marginT-20
             />
-            <Text text90 marginT-5 style={styles.subtitleText}>
+            {/* <Text text90 marginT-5 style={styles.subtitleText}>
               without watermark
-            </Text>
+            </Text> */}
 
             {/* User Guide */}
             <View style={styles.guideContainer}>
@@ -266,8 +266,8 @@ export const Download = () => {
             </View>
 
             <Text text80 marginT-30 style={styles.disclaimer}>
-              This app allows you to download TikTok videos without watermarks for personal use
-              only. Please respect copyright and intellectual property rights.
+              This app allows you to download TikTok videos for personal use only. Please respect
+              copyright and intellectual property rights.
             </Text>
           </View>
         </ScrollView>
