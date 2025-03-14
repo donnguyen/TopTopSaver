@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {StyleSheet, Dimensions, TouchableOpacity, Alert, Platform} from 'react-native';
+import {StyleSheet, Dimensions, TouchableOpacity, Alert, Platform, StatusBar} from 'react-native';
 import {View, Text, Colors} from 'react-native-ui-lib';
 import {useNavigation} from '@react-navigation/native';
 import {Screen} from '@app/components/screen';
@@ -13,13 +13,27 @@ import {Image} from 'expo-image';
 import {Ionicons} from '@expo/vector-icons';
 import CircularProgressIndicator from 'react-native-circular-progress-indicator';
 import {useActionSheet} from '@expo/react-native-action-sheet';
-import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+import {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+  useForeground,
+  InterstitialAd,
+  AdEventType,
+} from 'react-native-google-mobile-ads';
+import {NavioScreen} from 'rn-navio';
 
 const adUnitId = __DEV__
   ? TestIds.ADAPTIVE_BANNER
   : Platform.OS === 'ios'
     ? process.env.EXPO_PUBLIC_IOS_ADS_BANNER_UNIT_ID ?? ''
     : process.env.EXPO_PUBLIC_ANDROID_ADS_BANNER_UNIT_ID ?? '';
+
+const adInterstitialUnitId = __DEV__
+  ? TestIds.INTERSTITIAL
+  : Platform.OS === 'ios'
+    ? process.env.EXPO_PUBLIC_IOS_ADS_INTERSTITIAL_UNIT_ID ?? ''
+    : process.env.EXPO_PUBLIC_ANDROID_ADS_INTERSTITIAL_UNIT_ID ?? '';
 
 // Define a blurhash for placeholder images
 const PLACEHOLDER_BLURHASH =
@@ -175,12 +189,61 @@ const VideoItem = observer(
   },
 );
 
-export const Library = observer(() => {
-  const {t} = useServices();
+type Params = {
+  showInterstitialAds: boolean;
+  random: number;
+};
+
+const interstitial = InterstitialAd.createForAdRequest(adInterstitialUnitId, {});
+
+export const Library: NavioScreen = observer(() => {
+  const {t, navio} = useServices();
+  const params = navio.useParams<Params>();
   const navigation = useNavigation();
   const {videos, isLoading, loadVideos, deleteVideo, startDownload} = useVideosStore();
   const [initialLoading, setInitialLoading] = useState(true);
   const bannerRef = useRef<BannerAd>(null);
+
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setLoaded(true);
+    });
+
+    const unsubscribeOpened = interstitial.addAdEventListener(AdEventType.OPENED, () => {
+      if (Platform.OS === 'ios') {
+        // Prevent the close button from being unreachable by hiding the status bar on iOS
+        StatusBar.setHidden(true);
+      }
+    });
+
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      if (Platform.OS === 'ios') {
+        StatusBar.setHidden(false);
+      }
+    });
+
+    // Start loading the interstitial straight away
+    interstitial.load();
+
+    // Unsubscribe from events on unmount
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeOpened();
+      unsubscribeClosed();
+    };
+  }, [params?.random]);
+
+  useEffect(() => {
+    console.log('videos.length', videos.length);
+    console.log('loaded', loaded);
+    console.log('params?.showInterstitialAds', params?.showInterstitialAds);
+    if (videos.length > 1 && loaded && params?.showInterstitialAds) {
+      interstitial.show();
+      setLoaded(false);
+    }
+  }, [loaded, params?.showInterstitialAds, params?.random]);
 
   useForeground(() => {
     Platform.OS === 'ios' && bannerRef.current?.load();

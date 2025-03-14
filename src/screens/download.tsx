@@ -19,6 +19,7 @@ import {APIError} from '@app/services/api/tiktok';
 import {useVideosStore} from '@app/stores/videos.store';
 import {requestTrackingPermissionsAsync} from 'expo-tracking-transparency';
 import {BannerAd, BannerAdSize, TestIds, useForeground} from 'react-native-google-mobile-ads';
+import {NavioScreen} from 'rn-navio';
 
 const adUnitId = __DEV__
   ? TestIds.ADAPTIVE_BANNER
@@ -40,8 +41,8 @@ const TIKTOK_URL_PATTERNS = [
   /\b\d{19}\b/,
 ];
 
-export const Download = () => {
-  const {t, api} = useServices();
+export const Download: NavioScreen = () => {
+  const {t, api, navio} = useServices();
   const navigation = useNavigation();
   const {saveVideo} = useVideosStore();
   const videosDb = useVideosDatabase();
@@ -119,7 +120,10 @@ export const Download = () => {
       // Navigate to Library after the video has been persisted to the database
       // The download process will continue in the background
       // @ts-ignore - Using string navigation with Navio
-      navigation.navigate('LibraryTab');
+      navigation.navigate('LibraryTab', {
+        screen: 'Library',
+        params: {showInterstitialAds: true, random: Math.random()},
+      });
     } catch (err) {
       console.error('Download error:', err);
 

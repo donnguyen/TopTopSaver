@@ -39,6 +39,12 @@ export default (): JSX.Element => {
     configureDesignSystem();
     await initServices();
 
+    mobileAds()
+      .initialize()
+      .then(adapterStatuses => {
+        console.log('adapterStatuses', adapterStatuses);
+      });
+
     setReady(true);
     await SplashScreen.hideAsync();
   }, []);
@@ -46,16 +52,6 @@ export default (): JSX.Element => {
   useEffect(() => {
     onLaunch();
   }, [onLaunch]);
-
-  useEffect(() => {
-    (async () => {
-      mobileAds()
-        .initialize()
-        .then(adapterStatuses => {
-          console.log('adapterStatuses', adapterStatuses);
-        });
-    })();
-  }, []);
 
   const NotReady = useMemo(() => {
     // [Tip]
