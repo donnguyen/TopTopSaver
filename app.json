@@ -37,6 +37,7 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_MEDIA_LOCATION"
       ],
+      "blockedPermissions": ["FOREGROUND_SERVICE_MEDIA_PLAYBACK", "FOREGROUND_SERVICE"],
       "googleServicesFile": "./firebase/google-services.json"
     },
     "web": {
@@ -125,7 +126,13 @@
           ]
         }
       ],
-      "expo-video",
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
+      ],
       "expo-tracking-transparency"
     ],
     "extra": {

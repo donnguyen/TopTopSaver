@@ -239,7 +239,7 @@ export const Library: NavioScreen = observer(() => {
     console.log('videos.length', videos.length);
     console.log('loaded', loaded);
     console.log('params?.showInterstitialAds', params?.showInterstitialAds);
-    if (videos.length > 1 && loaded && params?.showInterstitialAds) {
+    if (videos.length > 2 && loaded && params?.showInterstitialAds) {
       interstitial.show();
       setLoaded(false);
     }
