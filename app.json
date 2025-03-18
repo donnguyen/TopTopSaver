@@ -2,7 +2,7 @@
   "expo": {
     "name": "TokSaver - TT Videos Library",
     "slug": "top-top-saver",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -37,7 +37,12 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_MEDIA_LOCATION"
       ],
-      "blockedPermissions": ["FOREGROUND_SERVICE_MEDIA_PLAYBACK", "FOREGROUND_SERVICE"],
+      "blockedPermissions": [
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "FOREGROUND_SERVICE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ],
       "googleServicesFile": "./firebase/google-services.json"
     },
     "web": {
